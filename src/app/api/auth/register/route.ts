@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db"; // Putanja do tvoje db instance (npr. lib/db.ts)
-import { korisnik } from "@/db/schema"; // Putanja do tvoje scheme
+import { db } from "@/db";
+import { korisnik } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -8,12 +8,10 @@ export async function POST(req: Request) {
   try {
     const { ime, prezime, email, lozinka } = await req.json();
 
-    // 1. Osnovna validacija na serveru
     if (!ime || !prezime || !email || !lozinka) {
       return NextResponse.json({ message: "Sva polja su obavezna." }, { status: 400 });
     }
 
-    // 2. Provera da li korisnik već postoji
     const postojeciKorisnik = await db
       .select()
       .from(korisnik)
@@ -27,16 +25,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. Hesiranje lozinke
     const hashedPassword = await bcrypt.hash(lozinka, 10);
 
-    // 4. Upis u bazu
     await db.insert(korisnik).values({
       ime,
       prezime,
       email,
       lozinka: hashedPassword,
-      uloga: "KLIJENT", // Podrazumevana uloga za nove registracije
+      uloga: "KLIJENT",
     });
 
     return NextResponse.json({ message: "Uspešna registracija!" }, { status: 201 });

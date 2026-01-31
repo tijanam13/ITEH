@@ -1,7 +1,6 @@
 import { defineConfig } from "drizzle-kit";
 import * as dotenv from "dotenv";
 
-// Eksplicitno učitavanje .env fajla
 dotenv.config({ path: ".env" });
 
 if (!process.env.DATABASE_URL) {
@@ -11,10 +10,10 @@ if (!process.env.DATABASE_URL) {
 }
 
 export default defineConfig({
-  schema: "./src/db/schema.ts", // Proveri da li je ovo tačna putanja do tvoje šeme
+  schema: "./src/db/schema.ts",
   out: "./drizzle",
   dialect: "***REMOVED***ql",
   dbCredentials: {
-    url: process.env.DATABASE_URL!, // Koristi 'url' za Postgres
+    url: process.env.DATABASE_URL!,
   },
 });

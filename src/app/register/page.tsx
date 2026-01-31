@@ -2,6 +2,7 @@
 
 import React, { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
@@ -41,8 +42,7 @@ export default function RegisterPage() {
         throw new Error(data.message || "Neuspešna registracija");
       }
 
-      // Ako je uspešno, šaljemo korisnika na login
-      router.push("/login"); 
+      router.push("/login");
     } catch (error: any) {
       setErr(error.message);
     } finally {
@@ -62,7 +62,7 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {err && <div className="auth-error-alert animate-pulse">{err}</div>}
+        {err && <div className="auth-error-alert">{err}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -97,7 +97,7 @@ export default function RegisterPage() {
               className="auth-input"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="ana@example.com"
+              placeholder="ana@gmail.com"
               required
             />
           </div>
@@ -136,9 +136,9 @@ export default function RegisterPage() {
         <div className="mt-8 text-center text-sm border-t border-[#E3CAA5]/30 pt-6">
           <p style={{ color: "#CEAB93" }}>
             Već imate nalog?{" "}
-            <a href="/login" className="font-black underline decoration-2 underline-offset-4" style={{ color: "#AD8B73" }}>
+            <Link href="/login" className="font-black underline decoration-2 underline-offset-4" style={{ color: "#AD8B73" }}>
               Prijavi se
-            </a>
+            </Link>
           </p>
         </div>
       </div>

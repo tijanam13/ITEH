@@ -18,7 +18,7 @@ export const korisnik = pgTable("korisnik", {
 export const kurs = pgTable("kurs", {
   id: uuid("id").primaryKey().defaultRandom(),
   naziv: varchar("naziv", { length: 150 }).notNull().unique(),
-  opis: varchar("opis", { length: 300 }).notNull(),
+  opis: varchar("opis", { length: 1000 }).notNull(),
   cena: numeric("cena", { precision: 10, scale: 2 }).notNull(),
   kategorija: varchar("kategorija", { length: 100 }).notNull(),
   slika: varchar("slika", { length: 1000 }).notNull(),
@@ -28,8 +28,8 @@ export const kurs = pgTable("kurs", {
 export const videoLekcija = pgTable("video_lekcija", {
   id: uuid("id").primaryKey().defaultRandom(),
   naziv: varchar("naziv", { length: 150 }).notNull(),
-  trajanje: numeric("trajanje").notNull(), 
-  opis: varchar("opis", { length: 300 }).notNull(),
+  trajanje: numeric("trajanje").notNull(),
+  opis: varchar("opis", { length: 1000 }).notNull(),
   video: varchar("video", { length: 1000 }).notNull(),
 
   kursId: uuid("kurs_id")
@@ -65,7 +65,7 @@ export const napredak = pgTable(
   "napredak",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
+
     odgledano: boolean("odgledano").notNull(),
 
     korisnikId: uuid("korisnik_id")

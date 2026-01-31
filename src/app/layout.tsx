@@ -1,7 +1,8 @@
 import "./globals.css";
-import Header from "./komponente/Header";
-import Footer from "./komponente/Footer";
-import { AuthProvider } from "./komponente/AuthContext";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/KorpaContext";
 
 export default function RootLayout({
   children,
@@ -9,12 +10,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="sr">
-      <body>
+    <html lang="sr" style={{ height: 'auto', minHeight: '100%' }}>
+      <body style={{ height: 'auto', minHeight: '100%', overflowY: 'auto' }}>
         <AuthProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
+          <CartProvider>
+            <Header />
+            <main style={{ minHeight: 'calc(100vh - 160px)', display: 'block' }}>
+              {children}
+            </main>
+            <Footer />
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

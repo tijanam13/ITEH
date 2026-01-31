@@ -3,12 +3,6 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { Client } from "pg";
 
-/**
- * VAŽNO ZA GMAIL:
- * 1. Uključi 2-Step Verification na insensitivo.makeup@gmail.com
- * 2. Napravi "App Password" na: https://myaccount.google.com/apppasswords
- * 3. Kopiraj 16-slovni kod i zalepi ga u GMAIL_APP_PASSWORD ili direktno u 'pass'.
- */
 
 export async function POST(req: Request) {
   const client = new Client({
@@ -25,7 +19,6 @@ export async function POST(req: Request) {
 
     await client.connect();
 
-    // 1. Provera da li korisnik postoji u tabeli 'korisnik'
     const query = 'SELECT * FROM korisnik WHERE email = $1';
     const result = await client.query(query, [email]);
 
@@ -37,13 +30,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Konfiguracija za Gmail slanje
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: "insensitivo.makeup@gmail.com",
-        // OBAVEZNO KORISTITI APP PASSWORD (16 SLOVA)
-        pass: process.env.GMAIL_APP_PASSWORD || "nelu spho gnzj fvom", 
+        pass: process.env.GMAIL_APP_PASSWORD || "nelu spho gnzj fvom",
       },
     });
 
@@ -73,11 +64,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Email uspešno poslat!" }, { status: 200 });
 
   } catch (error: any) {
-    if (client) try { await client.end(); } catch (e) {}
-    
+    if (client) try { await client.end(); } catch (e) { }
+
     console.error("DETALJNA GREŠKA:", error.message);
 
-    // Ako dobiješ 535, to je 100% pogrešna lozinka (treba App Password)
     if (error.message.includes("535") || error.message.includes("Invalid login")) {
       return NextResponse.json(
         { message: "Gmail odbija pristup. Moraš uključiti 2-Step Verification i koristiti App Password (16 slova)." },

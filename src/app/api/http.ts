@@ -1,13 +1,12 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 
 const http = axios.create({
-  baseURL: "http://localhost:3000/api", // Ovde stavi port tvog backenda (npr. 5000 ili 4000)
+  baseURL: "http://localhost:3000/api",
+  withCredentials: true,
 });
 
-// Dodajemo presretač
 http.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Proveravamo da li smo u browseru (jer Next.js nekad izvršava kod na serveru gde nema localStorage)
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
       if (token && config.headers) {
