@@ -27,6 +27,7 @@ export default function Header() {
             </>
           )}
 
+
           {uloga === "KLIJENT" && (
             <>
               <Link href="/stranice/svi-kursevi" className={linkStyle}>Kursevi</Link>
@@ -36,6 +37,8 @@ export default function Header() {
                 <Image src="/korpa3.png" alt="Korpa" width={40} height={40} />
               </Link>
 
+              <Link href="/stranice/o-meni" className={linkStyle}>O meni</Link>
+              <Link href="/stranice/kontakt" className={linkStyle}>Kontakt</Link>
               <button onClick={logout} className={`${linkStyle} logout-btn`}>Logout</button>
             </>
           )}
@@ -48,21 +51,26 @@ export default function Header() {
               <Link href="/stranice/promena-kurseva" className={linkStyle}>Promeni kurs</Link>
               <Link href="/stranice/svi-kursevi" className={linkStyle}>Kursevi</Link>
               <Link href="/stranice/pregled-prodaje-kurseva" className={linkStyle}>Pregled prodaje</Link>
-
+             
+              <Link href="/stranice/o-meni" className={linkStyle}>O meni</Link>
+              <Link href="/stranice/kontakt" className={linkStyle}>Kontakt</Link>
               <button onClick={logout} className={`${linkStyle} logout-btn`}>Logout</button>
             </>
           )}
 
           {uloga === "ADMIN" && (
             <>
+              <Link href="/stranice/pregled-korisnika" className={linkStyle}>Korisnici</Link>
+              <Link href="/stranice/dodaj-korisnika" className={linkStyle}>Dodaj korisnika</Link>
               <Link href="/stranice/mesecni-izvestaji" className={linkStyle}>Mesečni izveštaji o klijentima</Link>
               <Link href="/stranice/statistika-prodaje" className={linkStyle}>Statistika prodaje</Link>
+              
+              <Link href="/stranice/o-meni" className={linkStyle}>O meni</Link>
+              <Link href="/stranice/kontakt" className={linkStyle}>Kontakt</Link>
               <button onClick={logout} className={`${linkStyle} logout-btn`}>Logout</button>
             </>
           )}
-          <Link href="/stranice/kontakt" className={linkStyle}>Kontakt</Link>
-
-          <Link href="/stranice/o-meni" className={linkStyle}>O meni</Link>
+          
 
         </div>
       </nav>
