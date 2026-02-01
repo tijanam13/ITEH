@@ -101,6 +101,16 @@ function LoginFormContent() {
                 {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
               </button>
             </div>
+
+            <div className="flex justify-end mt-2">
+              <Link
+                href="/forgot-password"
+                className="text-xs font-bold hover:underline"
+                style={{ color: "#AD8B73" }}
+              >
+                Zaboravili ste lozinku?
+              </Link>
+            </div>
           </div>
 
           <button type="submit" disabled={loading} className="auth-btn">

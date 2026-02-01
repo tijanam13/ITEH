@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface CartItem {
-  id: number;
+  id: string;
   naziv: string;
   cena: number | string;
   slika: string;
@@ -11,7 +11,7 @@ interface CartItem {
 interface CartContextType {
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (id: number) => void;
+  removeFromCart: (id: string) => void;
   clearCart: () => void;
 }
 
@@ -44,7 +44,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 

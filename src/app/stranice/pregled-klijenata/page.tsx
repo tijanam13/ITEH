@@ -53,7 +53,7 @@ export default async function PregledKlijenataPage() {
               Pregled klijenata
             </h1>
             <p className="text-[#AD8B73] font-medium">
-              Spisak korisnika koji prate Vaše kurseve
+              Spisak klijenata koji prate Vaše kurseve.
             </p>
           </header>
 

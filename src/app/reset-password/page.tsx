@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-
+import { CheckCircle, Loader2 } from "lucide-react";
 export default function ResetPasswordPage() {
   const [novaLozinka, setNovaLozinka] = useState("");
   const [potvrda, setPotvrda] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
@@ -39,13 +40,18 @@ export default function ResetPasswordPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Greška pri ažuriranju.");
 
-      alert("Lozinka uspešno promenjena!");
-      router.push("/login");
+      setShowSuccess(true);
+
     } catch (error: any) {
       setErr(error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoToLogin = () => {
+    setShowSuccess(false);
+    router.push("/login");
   };
 
   if (!email) {
@@ -61,16 +67,34 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="auth-wrap">
+
+      {showSuccess && (
+        <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black/40 backdrop-blur-sm p-4">
+          <div className="auth-card flex flex-col items-center text-center animate-in zoom-in duration-300 max-w-sm">
+            <div className="bg-green-100 text-green-500 p-3 rounded-full mb-4">
+              <CheckCircle size={48} />
+            </div>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: "#AD8B73" }}>Lozinka je promenjena!</h2>
+            <p className="text-sm font-medium mb-6 text-gray-600">
+              Vaša lozinka je uspešno promenjena. Sada se možete prijaviti sa novim podacima.
+            </p>
+            <button onClick={handleGoToLogin} className="auth-btn !mt-0">
+              Idi na prijavu
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="auth-card">
         <div className="mb-8 text-center">
           <h2 className="playfair text-3xl font-black italic mb-2" style={{ color: "#AD8B73" }}>
             Nova Lozinka
           </h2>
           <p className="text-sm font-medium italic" style={{ color: "#CEAB93" }}>
-            Postavite novu lozinku za nalog: <br/><strong>{email}</strong>
+            Postavite novu lozinku za nalog: <br /><strong>{email}</strong>
           </p>
         </div>
-        
+
         {err && <div className="auth-error-alert">{err}</div>}
 
         <form onSubmit={handleUpdate} className="space-y-4">
@@ -97,7 +121,11 @@ export default function ResetPasswordPage() {
             />
           </div>
           <button type="submit" disabled={loading} className="auth-btn">
-            {loading ? "Čuvanje..." : "Sačuvaj novu lozinku"}
+            {loading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              "Sačuvaj novu lozinku"
+            )}
           </button>
         </form>
       </div>

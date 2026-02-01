@@ -9,57 +9,60 @@ export default function Header() {
   const { user, logout } = useContext(AuthContext);
   const uloga = user?.uloga;
 
+  const linkStyle = "nav-link text-lg font-medium hover:opacity-80 transition-all";
+
   return (
     <header className="site-header">
       <nav className="site-nav">
         <Link href="/" className="nav-logo">
-          <Image src="/logo.png" alt="Logo" width={70} height={70} />
+          <Image src="/logo.png" alt="Logo" width={80} height={80} />
         </Link>
 
         <div className="nav-links">
 
           {!user && (
             <>
-              <Link href="/login" className="nav-link">Prijava</Link>
-              <Link href="/register" className="nav-link">Registracija</Link>
+              <Link href="/login" className={linkStyle}>Prijava</Link>
+              <Link href="/register" className={linkStyle}>Registracija</Link>
             </>
           )}
 
           {uloga === "KLIJENT" && (
             <>
-              <Link href="/stranice/svi-kursevi" className="nav-link">Kursevi</Link>
-              <Link href="/stranice/kupljeni-kursevi" className="nav-link">Kupljeni kursevi</Link>
-              <Link href="/stranice/kontakt" className="nav-link">Kontakt</Link>
+              <Link href="/stranice/svi-kursevi" className={linkStyle}>Kursevi</Link>
+              <Link href="/stranice/kupljeni-kursevi" className={linkStyle}>Kupljeni kursevi</Link>
 
               <Link href="/stranice/korpa" className="nav-link">
-                <Image src="/korpa3.png" alt="Korpa" width={30} height={40} />
+                <Image src="/korpa3.png" alt="Korpa" width={40} height={40} />
               </Link>
 
-              <button onClick={logout} className="nav-link logout-btn">Logout</button>
+              <button onClick={logout} className={`${linkStyle} logout-btn`}>Logout</button>
             </>
           )}
 
           {uloga === "EDUKATOR" && (
             <>
-              <Link href="/stranice/pregled-klijenata" className="nav-link">Klijenti</Link>
-              <Link href="/stranice/dodaj-kurs" className="nav-link">Dodaj kurs</Link>
-              <Link href="/stranice/obrisi-kurs" className="nav-link">Obriši kurs</Link>
-              <Link href="/stranice/promena-kurseva" className="nav-link">Promeni kurs</Link>
-              <Link href="/stranice/svi-kursevi" className="nav-link">Kursevi</Link>
-              <Link href="/stranice/pregled-prodaje-kurseva" className="nav-link">Pregled prodaje</Link>
+              <Link href="/stranice/pregled-klijenata" className={linkStyle}>Klijenti</Link>
+              <Link href="/stranice/dodaj-kurs" className={linkStyle}>Dodaj kurs</Link>
+              <Link href="/stranice/brisanje-kurseva" className={linkStyle}>Obriši kurs</Link>
+              <Link href="/stranice/promena-kurseva" className={linkStyle}>Promeni kurs</Link>
+              <Link href="/stranice/svi-kursevi" className={linkStyle}>Kursevi</Link>
+              <Link href="/stranice/pregled-prodaje-kurseva" className={linkStyle}>Pregled prodaje</Link>
 
-              <button onClick={logout} className="nav-link logout-btn">Logout</button>
+              <button onClick={logout} className={`${linkStyle} logout-btn`}>Logout</button>
             </>
           )}
 
           {uloga === "ADMIN" && (
             <>
-              <Link href="/stranice/administratori/admin" className="nav-link">Admin panel</Link>
-              <Link href="/stranice/administratori/klijenti-edukatori" className="nav-link">Klijenti i edukatori</Link>
-              <button onClick={logout} className="nav-link logout-btn">Logout</button>
+              <Link href="/stranice/mesecni-izvestaji" className={linkStyle}>Mesečni izveštaji o klijentima</Link>
+              <Link href="/stranice/statistika-prodaje" className={linkStyle}>Statistika prodaje</Link>
+              <button onClick={logout} className={`${linkStyle} logout-btn`}>Logout</button>
             </>
           )}
-          <Link href="/stranice/o-meni" className="nav-link">O meni</Link>
+          <Link href="/stranice/kontakt" className={linkStyle}>Kontakt</Link>
+
+          <Link href="/stranice/o-meni" className={linkStyle}>O meni</Link>
 
         </div>
       </nav>

@@ -1,14 +1,13 @@
 "use client";
 import RoleGuard from "../../components/RoleGuard";
-
 import { useCart } from "../../context/KorpaContext";
 import Image from "next/image";
 import Link from "next/link";
-import { Trash2, ChevronLeft, CheckCircle, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Trash2, ChevronLeft, CheckCircle, Loader2, ShoppingBag } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function KorpaPage() {
+function KorpaContent() {
   const { cart, removeFromCart, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
@@ -22,6 +21,7 @@ export default function KorpaPage() {
   }, [searchParams, clearCart]);
 
   const handleCheckout = async () => {
+    if (cart.length === 0) return;
     setLoading(true);
     try {
       const response = await fetch("/api/checkout", {
@@ -35,7 +35,7 @@ export default function KorpaPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert("Greška prilikom pokretanja plaćanja.");
+        alert(data.error || "Greška prilikom pokretanja plaćanja.");
         setLoading(false);
       }
     } catch (error) {
@@ -47,88 +47,96 @@ export default function KorpaPage() {
 
   if (searchParams.get("success")) {
     return (
-
-      <div className="min-h-screen bg-[#FFFBE9] flex flex-col items-center justify-center p-8 text-center">
-        <div className="bg-white p-10 rounded-3xl shadow-xl border-2 border-green-200">
-          <CheckCircle size={80} className="text-green-500 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold mb-2 text-[--color-primary]">Uplata Uspešna!</h1>
-          <p className="text-gray-600 mb-8">Hvala vam na kupovini. Vaši kursevi su sada dostupni.</p>
-          <Link href="/stranice/kupljeni-kursevi" className="auth-btn !w-auto !px-8">
-            Idi na moje kurseve
+      <div className="min-h-screen bg-[#FFFBE9] flex flex-col items-center justify-center p-8 text-center animate-in fade-in">
+        <div className="bg-white p-10 rounded-[40px] shadow-2xl border-2 border-green-100 max-w-md">
+          <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={50} className="text-green-500" />
+          </div>
+          <h1 className="text-3xl font-black mb-2 text-[--color-primary] uppercase tracking-tighter">Uplata Uspešna!</h1>
+          <p className="text-gray-500 mb-8 font-medium">Hvala vam na poverenju. Vaši kursevi su obrađeni i dodati na vaš nalog.</p>
+          <Link href="/stranice/kupljeni-kursevi" className="auth-btn !w-auto !px-10 shadow-lg">
+            Gledaj moje kurseve
           </Link>
         </div>
       </div>
-
     );
   }
 
   if (cart.length === 0) {
     return (
       <div className="min-h-screen bg-[#FFFBE9] flex flex-col items-center justify-center p-8 text-center">
+        <ShoppingBag size={80} className="text-[--color-accent] mb-6 opacity-20" />
         <h1 className="text-3xl font-bold mb-4 text-[--color-primary]">Tvoja korpa je prazna</h1>
-        <Link href="/stranice/svi-kursevi" className="auth-btn !w-auto !px-6">
-          <ChevronLeft size={20} /> Nazad na kurseve
+        <Link href="/stranice/svi-kursevi" className="auth-btn !w-auto !px-8 flex items-center gap-2">
+          <ChevronLeft size={20} /> Istraži kurseve
         </Link>
       </div>
     );
   }
 
   return (
-    <RoleGuard allowedRoles={["KLIJENT"]}>{
+    <div className="min-h-screen bg-[#FFFBE9] p-4 md:p-12">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-black mb-10 text-[--color-primary] uppercase tracking-tighter border-b-4 border-[--color-accent] inline-block">Tvoja Korpa</h1>
 
-      <div className="min-h-screen bg-[#FFFBE9] p-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-10 text-[--color-primary]">Tvoja Korpa</h1>
-
-          <div className="auth-card !max-w-none">
-            <div className="space-y-6">
-              {cart.map((item) => (
-                <div key={item.id} className="flex flex-col sm:flex-row items-center justify-between border-b border-[--color-accent] pb-6 gap-4">
-                  <div className="flex items-center gap-4 w-full">
-                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-[--color-accent]">
-                      <Image src={item.slika} alt={item.naziv} fill className="object-cover" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-xl text-[--color-text]">{item.naziv}</h3>
-                      <p className="text-[--color-primary] font-black">{item.cena} €</p>
-                    </div>
+        <div className="auth-card !max-w-none !p-4 md:!p-10 shadow-2xl animate-in slide-in-from-bottom-5">
+          <div className="space-y-6">
+            {cart.map((item) => (
+              <div key={item.id} className="flex flex-col sm:flex-row items-center justify-between border-b border-[--color-accent]/30 pb-6 gap-4">
+                <div className="flex items-center gap-6 w-full">
+                  <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-[--color-accent] shadow-md flex-shrink-0">
+                    <Image src={item.slika} alt={item.naziv} fill className="object-cover" />
                   </div>
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="text-red-400 hover:text-red-600 p-2 transition-colors"
-                  >
-                    <Trash2 size={28} />
-                  </button>
+                  <div className="text-left">
+                    <h3 className="font-bold text-xl text-[--color-text] leading-tight">{item.naziv}</h3>
+                    <p className="text-[--color-primary] font-black text-lg mt-1">{item.cena} €</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-
-            <div className="mt-10 p-6 bg-[--color-accent]/20 rounded-2xl border-2 border-dashed border-[--color-primary]">
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-xl font-bold text-[--color-text]">Ukupno za uplatu:</span>
-                <span className="text-4xl font-black text-[--color-primary]">{ukupno} €</span>
+                <button
+                  onClick={() => removeFromCart(item.id)}
+                  className="text-red-300 hover:text-red-500 p-2 transition-all hover:bg-red-50 rounded-full"
+                  title="Ukloni iz korpe"
+                >
+                  <Trash2 size={24} />
+                </button>
               </div>
+            ))}
+          </div>
 
-              <button
-                onClick={handleCheckout}
-                disabled={loading}
-                className="auth-btn text-xl disabled:opacity-50"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin" /> Povezivanje sa Stripe-om...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle /> Potvrdi i Plati
-                  </>
-                )}
-              </button>
+          <div className="mt-12 p-8 bg-[--color-accent]/10 rounded-[35px] border-2 border-dashed border-[--color-primary]/30 flex flex-col items-center">
+            <div className="flex justify-between items-center w-full max-w-md mb-8">
+              <span className="text-lg font-bold text-[--color-text] uppercase tracking-widest">Ukupno:</span>
+              <span className="text-4xl font-black text-[--color-primary]">{ukupno} €</span>
             </div>
+
+            <button
+              onClick={handleCheckout}
+              disabled={loading}
+              className="auth-btn !py-5 text-xl disabled:opacity-50 shadow-xl max-w-md"
+            >
+              {loading ? (
+                <div className="flex items-center gap-3">
+                  <Loader2 className="animate-spin" /> Povezivanje...
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  POTVRDI I PLATI
+                </div>
+              )}
+            </button>
           </div>
         </div>
       </div>
-    }</RoleGuard>
+    </div>
+  );
+}
 
+export default function KorpaPage() {
+  return (
+    <RoleGuard allowedRoles={["KLIJENT"]}>
+      <Suspense fallback={<div className="min-h-screen bg-[#FFFBE9] flex items-center justify-center italic">Učitavanje korpe...</div>}>
+        <KorpaContent />
+      </Suspense>
+    </RoleGuard>
   );
 }

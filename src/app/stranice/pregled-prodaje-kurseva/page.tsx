@@ -65,24 +65,24 @@ export default async function PregledKlijenataPage() {
               Pregled prodaje po kursevima
             </h1>
             <p className="text-[#AD8B73] font-medium">
-              Spisak korisnika koji su kupili Vaše kurseve
+              Spisak korisnika koji su kupili Vaše kurseve.
             </p>
           </header>
 
           {kurseviSaKlijentima.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center border-2 border-dashed border-[#E3CAA5]">
               <p className="text-[#AD8B73] text-xl font-semibold">
-                Još uvek niko nije kreirao kurseve ili ih kupio.
+                Još uvek niste kreirali kurseve.
               </p>
             </div>
           ) : (
             kurseviSaKlijentima.map((k, idx) => (
               <div key={idx} className="mb-10">
                 <h2 className="text-2xl font-bold text-[#4a3f35] mb-4 flex items-center gap-2">
-                {k.naziv} 
-                <span className="text-2xl font-bold text-[#AD8B73]">
+                  {k.naziv}
+                  <span className="text-2xl font-bold text-[#AD8B73]">
                     (Broj klijenata: {k.klijenti.length})
-                </span>
+                  </span>
                 </h2>
 
                 {k.klijenti.length === 0 ? (

@@ -33,7 +33,7 @@ export default function PretragaKlijenata({ klijenti }: Props) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="w-full p-4 rounded-3xl border-2 border-[#E3CAA5] focus:outline-none focus:ring-2 focus:ring-[#AD8B73] bg-white placeholder:text-[#AD8B73] text-[#4a3f35] font-medium"
-     />
+      />
 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">

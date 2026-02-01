@@ -67,7 +67,7 @@ export default function Kontakt() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label className="auth-label">Ime i Prezime</label>
-                  <input type="text" name="KLIJENT" className="auth-input" placeholder="Vaše ime..." required />
+                  <input type="text" name="KLIJENT" className="auth-input" placeholder="Vaše ime i prezime..." required />
                 </div>
                 <div>
                   <label className="auth-label">E-mail adresa</label>

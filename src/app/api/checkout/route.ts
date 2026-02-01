@@ -20,7 +20,10 @@ export async function POST(req: Request) {
     const lineItems = items.map((item: any) => ({
       price_data: {
         currency: "eur",
-        product_data: { name: item.naziv, images: [item.slika] },
+        product_data: {
+          name: item.naziv,
+          images: item.slika ? [item.slika] : []
+        },
         unit_amount: Math.round(Number(item.cena) * 100),
       },
       quantity: 1,
@@ -34,12 +37,13 @@ export async function POST(req: Request) {
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/stranice/korpa?canceled=true`,
       metadata: {
         korisnikId: korisnikId,
-        kursIds: JSON.stringify(items.map((i: any) => i.id)),
+        kursIds: JSON.stringify(items.map((i: any) => i.id.toString())),
       },
     });
 
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
+    console.error("Checkout Error:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

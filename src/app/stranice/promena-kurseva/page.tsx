@@ -10,17 +10,17 @@ import {
   izmeniKompletanKurs,
 } from "@/app/actions/kurs";
 import { validirajLekciju } from "@/app/utils/validacijalekcije";
-
 import Image from "next/image";
-import { X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import {
+  X, CheckCircle, AlertCircle, Loader2, BookOpen, Euro, Tag,
+  Clock, FileText, ChevronUp, ChevronDown
+} from "lucide-react";
 
 export default function IzmeniKursPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const [kursevi, setKursevi] = useState<any[]>([]);
   const [selectedKursId, setSelectedKursId] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{
     message: string;
@@ -43,23 +43,18 @@ export default function IzmeniKursPage() {
     trajanje: "",
   });
 
-  // Dohvati sve kurseve edukatora
   useEffect(() => {
     getKurseviEdukatora().then((res) => {
       setKursevi(res);
-
-      // Ako postoji query param ?kursId, selektuj odmah taj kurs
       const kursIdIzQuery = searchParams.get("kursId");
-      if (kursIdIzQuery && res.find((k) => k.id === kursIdIzQuery)) {
+      if (kursIdIzQuery && res.find((k: any) => k.id === kursIdIzQuery)) {
         setSelectedKursId(kursIdIzQuery);
       }
     });
   }, [searchParams]);
 
-  // Dohvati podatke za selektovani kurs
   useEffect(() => {
     if (!selectedKursId) return;
-
     getKursSaLekcijama(selectedKursId).then((kurs) => {
       setKursData({
         naziv: kurs.naziv,
@@ -72,7 +67,21 @@ export default function IzmeniKursPage() {
     });
   }, [selectedKursId]);
 
+  const pomeriLekciju = (index: number, smer: 'gore' | 'dole') => {
+    const noveLekcije = [...lekcije];
+    const ciljniIndex = smer === 'gore' ? index - 1 : index + 1;
+
+    if (ciljniIndex < 0 || ciljniIndex >= noveLekcije.length) return;
+
+    [noveLekcije[index], noveLekcije[ciljniIndex]] = [noveLekcije[ciljniIndex], noveLekcije[index]];
+    setLekcije(noveLekcije);
+  };
+
   const handleDodajLekcijuUListu = () => {
+    if (!trenutnaLekcija.naziv.trim() || !trenutnaLekcija.opis.trim() || !trenutnaLekcija.trajanje || !trenutnaLekcija.video) {
+      setNotification({ message: "Niste popunili sve podatke o lekciji!", type: "error" });
+      return;
+    }
     const error = validirajLekciju(trenutnaLekcija);
     if (error) {
       setNotification({ message: error, type: "error" });
@@ -81,16 +90,11 @@ export default function IzmeniKursPage() {
 
     setLekcije((prev) => [...prev, trenutnaLekcija]);
     setTrenutnaLekcija({ naziv: "", opis: "", video: "", trajanje: "" });
-    setNotification(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!selectedKursId) {
-      setNotification({ message: "Izaberite kurs!", type: "error" });
-      return;
-    }
+    if (!selectedKursId) return;
 
     setLoading(true);
     try {
@@ -115,151 +119,123 @@ export default function IzmeniKursPage() {
 
   return (
     <RoleGuard allowedRoles={["EDUKATOR"]}>
-      <div className="auth-wrap min-h-screen pb-20">
+      <div className="auth-wrap min-h-screen pb-20 block">
+
         {notification && (
-          <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black/40 backdrop-blur-sm p-4">
             <div className="bg-white rounded-3xl p-6 shadow-2xl border-2 border-[--color-accent] max-w-sm w-full text-center">
-              <div
-                className={`mx-auto mb-4 p-3 rounded-full w-fit ${
-                  notification.type === "success"
-                    ? "bg-green-100 text-green-500"
-                    : "bg-red-100 text-red-500"
-                }`}
-              >
-                {notification.type === "success" ? (
-                  <CheckCircle size={40} />
-                ) : (
-                  <AlertCircle size={40} />
-                )}
+              <div className={`mx-auto mb-4 p-3 rounded-full w-fit ${notification.type === "success" ? "bg-green-100 text-green-500" : "bg-red-100 text-red-500"}`}>
+                {notification.type === "success" ? <CheckCircle size={40} /> : <AlertCircle size={40} />}
               </div>
               <p className="text-lg font-bold mb-6">{notification.message}</p>
-              <button onClick={() => setNotification(null)} className="auth-btn">
-                Zatvori
-              </button>
+              <button onClick={() => setNotification(null)} className="auth-btn !mt-0">Zatvori</button>
             </div>
           </div>
         )}
 
-        {/* Dropdown za izbor kursa */}
-        <div className="auth-card max-w-xl mx-auto mt-10">
-          <label className="contact-label">Izaberite kurs za izmenu</label>
+        <div className="auth-card max-w-2xl mx-auto mt-10 border-b-4 border-[--color-accent]">
+          <div className="flex items-center gap-3 mb-4 text-[--color-primary]">
+            <BookOpen size={24} />
+            <label className="contact-label !mb-0 text-xl">Koji kurs želite da izmenite?</label>
+          </div>
           <select
-            className="auth-input"
+            className="auth-input cursor-pointer"
             value={selectedKursId}
             onChange={(e) => setSelectedKursId(e.target.value)}
           >
-            <option value="">-- Izaberite kurs --</option>
+            <option value="">-- Odaberite kurs --</option>
             {kursevi.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.naziv}
-              </option>
+              <option key={k.id} value={k.id}>{k.naziv}</option>
             ))}
           </select>
         </div>
 
-        {/* Forma za izmenu kursa */}
         {selectedKursId && (
           <div className="auth-card max-w-4xl mx-auto mt-10">
-            <h1 className="text-2xl font-bold mb-6 text-center uppercase tracking-widest">
-              Izmeni kurs
+            <h1 className="text-2xl font-bold mb-6 text-[--color-primary] border-b border-[--color-accent] pb-2 text-center uppercase tracking-widest">
+              Promena podataka o kursu
             </h1>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <input
-                className="auth-input"
-                value={kursData.naziv}
-                onChange={(e) => setKursData((p) => ({ ...p, naziv: e.target.value }))}
-                placeholder="Naziv kursa"
-              />
 
-              <textarea
-                className="auth-input min-h-[80px]"
-                value={kursData.opis}
-                onChange={(e) => setKursData((p) => ({ ...p, opis: e.target.value }))}
-                placeholder="Opis kursa"
-              />
-
-              {!kursData.slika ? (
-                <VideoUpload
-                  label="Promeni sliku"
-                  onUploadSuccess={(url) => setKursData((p) => ({ ...p, slika: url }))}
-                />
-              ) : (
-                <div className="relative h-40 rounded-xl overflow-hidden">
-                  <Image src={kursData.slika} alt="Slika kursa" fill className="object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => setKursData((p) => ({ ...p, slika: "" }))}
-                    className="absolute top-2 right-2 bg-white rounded-full p-1"
-                  >
-                    <X />
-                  </button>
-                </div>
-              )}
-
-              {/* Lekcije */}
-              <div className="border-2 border-dashed border-black rounded-2xl p-5 mb-6">
-                <h2 className="font-bold text-lg mb-4 text-center">
-                  Lekcije u okviru kursa
-                </h2>
-
-                {lekcije.length === 0 && (
-                  <p className="text-center text-gray-500 mb-3">
-                    Trenutno nema dodatih lekcija
-                  </p>
-                )}
-
-                {lekcije.map((l, i) => (
-                  <div
-                    key={i}
-                    className="flex justify-between items-center bg-white p-3 rounded-xl mb-2 shadow-sm"
-                  >
-                    <span className="font-medium">
-                      {l.naziv} ({l.trajanje} min)
-                    </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                <div className="space-y-4">
+                  <div>
+                    <label className="contact-label">Naziv kursa</label>
+                    <input className="auth-input" value={kursData.naziv} onChange={(e) => setKursData((p) => ({ ...p, naziv: e.target.value }))} />
                   </div>
-                ))}
-
-                <input
-                  className="auth-input mt-4"
-                  placeholder="Naziv lekcije"
-                  value={trenutnaLekcija.naziv}
-                  onChange={(e) => setTrenutnaLekcija((p) => ({ ...p, naziv: e.target.value }))}
-                />
-
-                <textarea
-                  className="auth-input mt-2 min-h-[60px]"
-                  placeholder="Opis lekcije"
-                  value={trenutnaLekcija.opis}
-                  onChange={(e) => setTrenutnaLekcija((p) => ({ ...p, opis: e.target.value }))}
-                />
-
-                <input
-                  type="number"
-                  className="auth-input mt-2"
-                  placeholder="Trajanje (min)"
-                  value={trenutnaLekcija.trajanje}
-                  onChange={(e) => setTrenutnaLekcija((p) => ({ ...p, trajanje: e.target.value }))}
-                />
-
-                {!trenutnaLekcija.video && (
-                  <VideoUpload
-                    label="Dodaj video lekcije"
-                    onUploadSuccess={(url) => setTrenutnaLekcija((p) => ({ ...p, video: url }))}
-                  />
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleDodajLekcijuUListu}
-                  className="auth-btn mt-4 w-full"
-                >
-                  + Dodaj lekciju
-                </button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="contact-label flex items-center gap-1"><Euro size={14} /> Cena (€)</label>
+                      <input type="number" step="0.01" className="auth-input" value={kursData.cena} onChange={(e) => setKursData((p) => ({ ...p, cena: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="contact-label flex items-center gap-1"><Tag size={14} /> Kategorija</label>
+                      <input className="auth-input" value={kursData.kategorija} onChange={(e) => setKursData((p) => ({ ...p, kategorija: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="contact-label">Naslovna slika</label>
+                  {kursData.slika ? (
+                    <div className="relative h-36 w-full rounded-2xl overflow-hidden border-2 border-[--color-accent]">
+                      <Image src={kursData.slika} alt="Slika" fill className="object-cover" />
+                      <button type="button" onClick={() => setKursData((p) => ({ ...p, slika: "" }))} className="absolute top-2 right-2 bg-white rounded-full p-1"><X size={20} /></button>
+                    </div>
+                  ) : <VideoUpload label="Postavi sliku" onUploadSuccess={(url) => setKursData((p) => ({ ...p, slika: url }))} />}
+                </div>
               </div>
 
-              <button type="submit" disabled={loading} className="auth-btn text-lg">
-                {loading ? <Loader2 className="animate-spin mx-auto" /> : "SAČUVAJ IZMENE"}
+              <div className="text-left">
+                <label className="contact-label">Opis kursa</label>
+                <textarea className="auth-input min-h-[100px]" value={kursData.opis} onChange={(e) => setKursData((p) => ({ ...p, opis: e.target.value }))} />
+              </div>
+
+              <hr className="border-[--color-accent] opacity-30" />
+
+              <div className="p-6 rounded-3xl border-2 border-dashed border-[--color-secondary] bg-white/40 space-y-4 text-left">
+                <h2 className="text-lg font-bold text-[--color-primary] text-center italic underline flex items-center justify-center gap-2">
+                  <FileText size={20} /> Upravljanje lekcijama
+                </h2>
+
+                <div className="space-y-2">
+                  {lekcije.map((l, idx) => (
+                    <div key={idx} className="flex justify-between items-center bg-white p-3 rounded-xl border border-[--color-accent] shadow-sm">
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col gap-1">
+                          <button type="button" onClick={() => pomeriLekciju(idx, 'gore')} className="text-gray-400 hover:text-[--color-primary] disabled:opacity-30" disabled={idx === 0}>
+                            <ChevronUp size={20} />
+                          </button>
+                          <button type="button" onClick={() => pomeriLekciju(idx, 'dole')} className="text-gray-400 hover:text-[--color-primary] disabled:opacity-30" disabled={idx === lekcije.length - 1}>
+                            <ChevronDown size={20} />
+                          </button>
+                        </div>
+                        <div>
+                          <span className="text-sm font-bold block">{idx + 1}. {l.naziv}</span>
+                          <span className="text-xs text-gray-400">{l.trajanje} sekunde</span>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setLekcije((p) => p.filter((_, i) => i !== idx))} className="text-red-400"><X size={20} /></button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-[--color-accent]/10 p-4 rounded-2xl space-y-3">
+                  <p className="text-xs font-bold text-[--color-primary] uppercase italic">Dodaj novu lekciju:</p>
+                  <input className="auth-input" placeholder="Naziv" value={trenutnaLekcija.naziv} onChange={(e) => setTrenutnaLekcija(p => ({ ...p, naziv: e.target.value }))} />
+                  <input className="auth-input" type="number" placeholder="Trajanje (sekunde)" value={trenutnaLekcija.trajanje} onChange={(e) => setTrenutnaLekcija(p => ({ ...p, trajanje: e.target.value }))} />
+                  <textarea className="auth-input min-h-[60px]" placeholder="Opis" value={trenutnaLekcija.opis} onChange={(e) => setTrenutnaLekcija(p => ({ ...p, opis: e.target.value }))} />
+
+                  {!trenutnaLekcija.video ? (
+                    <VideoUpload label="Otpremi video" onUploadSuccess={(url) => setTrenutnaLekcija(p => ({ ...p, video: url }))} />
+                  ) : <div className="p-2 bg-green-50 text-green-700 rounded-xl text-center font-bold text-xs">✅ Video spreman</div>}
+
+                  <button type="button" onClick={handleDodajLekcijuUListu} className="auth-btn !py-2 bg-[--color-secondary]">+ Dodaj u listu</button>
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading} className="auth-btn !py-4 text-lg">
+                {loading ? <Loader2 className="animate-spin mx-auto" /> : "SAČUVAJ SVE IZMENE"}
               </button>
             </form>
           </div>

@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
+    console.error("Webhook Signature Error:", err.message);
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
@@ -27,27 +28,29 @@ export async function POST(req: Request) {
 
     const korisnikId = session.metadata?.korisnikId;
     const kursIds = JSON.parse(session.metadata?.kursIds || "[]");
+
     const metoda = session.payment_method_types?.[0] || "card";
 
     if (!korisnikId || kursIds.length === 0) {
+      console.error("Metadata nedostaje u Stripe sesiji");
       return new NextResponse("Missing metadata", { status: 400 });
     }
 
-    console.log(`Započinjem upis u bazu za korisnika ${korisnikId}`);
+    console.log(`Pokušaj upisa u bazu za korisnika: ${korisnikId}, kursevi: ${kursIds}`);
 
     try {
       for (const kursId of kursIds) {
         await db.insert(kupljeniKursevi).values({
           korisnikId: korisnikId,
-          kursId: kursId,
+          kursId: kursId.toString(),
           metodPlacanja: metoda,
           statusPlacanja: "PLAĆENO",
           datum: new Date(),
         });
       }
-      console.log("Uspešno upisano u bazu!");
+      console.log("Upis u bazu uspešan!");
     } catch (dbError) {
-      console.error("Greška pri upisu u bazu:", dbError);
+      console.error("Baza podataka ERROR:", dbError);
       return new NextResponse("Database Error", { status: 500 });
     }
   }

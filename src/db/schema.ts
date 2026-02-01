@@ -13,6 +13,8 @@ export const korisnik = pgTable("korisnik", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   lozinka: varchar("lozinka", { length: 255 }).notNull(),
   uloga: ulogaEnum("uloga").notNull(),
+  datumRegistracije: timestamp("datum_registracije").defaultNow().notNull(),
+
 });
 
 export const kurs = pgTable("kurs", {
@@ -31,6 +33,7 @@ export const videoLekcija = pgTable("video_lekcija", {
   trajanje: numeric("trajanje").notNull(),
   opis: varchar("opis", { length: 1000 }).notNull(),
   video: varchar("video", { length: 1000 }).notNull(),
+  poredak: integer("poredak").notNull().default(0),
 
   kursId: uuid("kurs_id")
     .references(() => kurs.id, { onDelete: "cascade" })

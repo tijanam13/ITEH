@@ -40,14 +40,13 @@ export async function POST(req: Request) {
 
     const resetLink = `http://localhost:3000/reset-password?email=${email}`;
 
-    // 3. Slanje mejla
     await transporter.sendMail({
-      from: '"Makeup Studio" <insensitivo.makeup@gmail.com>',
+      from: '"Insensitivo Makeup" <insensitivo.makeup@gmail.com>',
       to: email,
       subject: "Promena lozinke",
       html: `
         <div style="font-family: Arial, sans-serif; text-align: center; background-color: #fdfaf8; padding: 40px; border-radius: 15px;">
-          <h2 style="color: #AD8B73;">Makeup Studio</h2>
+          <h2 style="color: #AD8B73;">Insensitivo Makeup</h2>
           <p>Primili smo zahtev za promenu lozinke za vaš nalog.</p>
           <p>Kliknite na dugme ispod da biste postavili novu lozinku:</p>
           <br>

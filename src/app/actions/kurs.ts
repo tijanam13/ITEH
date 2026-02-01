@@ -4,7 +4,7 @@ import { db } from "@/db/index";
 import { kurs, videoLekcija } from "@/db/schema";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
 
@@ -45,12 +45,13 @@ export async function kreirajKompletanKurs(data: any): Promise<{ success: boolea
         edukator: edukatorId,
       }).returning();
 
-      const lekcijeZaBazu = data.lekcije.map((l: any) => ({
+      const lekcijeZaBazu = data.lekcije.map((l: any, index: number) => ({
         naziv: l.naziv,
         opis: l.opis,
         trajanje: l.trajanje.toString(),
         video: l.video,
         kursId: noviKurs.id,
+        poredak: index,
       }));
 
       await tx.insert(videoLekcija).values(lekcijeZaBazu);
@@ -83,6 +84,10 @@ export async function getKurseviEdukatora() {
     .select({
       id: kurs.id,
       naziv: kurs.naziv,
+      opis: kurs.opis,
+      cena: kurs.cena,
+      slika: kurs.slika,
+      kategorija: kurs.kategorija
     })
     .from(kurs)
     .where(eq(kurs.edukator, edukatorId));
@@ -113,7 +118,8 @@ export async function getKursSaLekcijama(kursId: string) {
   const lekcije = await db
     .select()
     .from(videoLekcija)
-    .where(eq(videoLekcija.kursId, kursId));
+    .where(eq(videoLekcija.kursId, kursId))
+    .orderBy(asc(videoLekcija.poredak));
 
   return {
     ...kursPodaci,
@@ -148,7 +154,7 @@ export async function izmeniKompletanKurs(data: any): Promise<{ success: boolean
     }
 
     return await db.transaction(async (tx) => {
-      
+
       await tx
         .update(kurs)
         .set({
@@ -160,7 +166,9 @@ export async function izmeniKompletanKurs(data: any): Promise<{ success: boolean
         })
         .where(eq(kurs.id, kursId));
 
-      for (const l of data.lekcije) {
+      for (let i = 0; i < data.lekcije.length; i++) {
+        const l = data.lekcije[i];
+
         if (l.id) {
           await tx
             .update(videoLekcija)
@@ -169,16 +177,17 @@ export async function izmeniKompletanKurs(data: any): Promise<{ success: boolean
               opis: l.opis,
               trajanje: l.trajanje.toString(),
               video: l.video,
+              poredak: i,
             })
             .where(eq(videoLekcija.id, l.id));
         } else {
-          
           await tx.insert(videoLekcija).values({
             naziv: l.naziv,
             opis: l.opis,
             trajanje: l.trajanje.toString(),
             video: l.video,
             kursId,
+            poredak: i,
           });
         }
       }
@@ -189,5 +198,39 @@ export async function izmeniKompletanKurs(data: any): Promise<{ success: boolean
   } catch (error: any) {
     console.error("IZMENA KURSA ERROR:", error);
     return { success: false, error: "Greška pri izmeni kursa." };
+  }
+}
+
+export async function obrisiKurs(kursId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth")?.value;
+    if (!token) return { success: false, error: "Niste ulogovani." };
+
+    let edukatorId: string;
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
+      edukatorId = decoded.sub;
+    } catch {
+      return { success: false, error: "Sesija nevažeća." };
+    }
+
+    const [provera] = await db
+      .select()
+      .from(kurs)
+      .where(eq(kurs.id, kursId));
+
+    if (!provera || provera.edukator !== edukatorId) {
+      return { success: false, error: "Nemate pravo da obrišete ovaj kurs." };
+    }
+
+    return await db.transaction(async (tx) => {
+      await tx.delete(videoLekcija).where(eq(videoLekcija.kursId, kursId));
+      await tx.delete(kurs).where(eq(kurs.id, kursId));
+      return { success: true };
+    });
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+    return { success: false, error: "Došlo je do greške pri brisanju iz baze." };
   }
 }

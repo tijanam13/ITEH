@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
 
 export default async function KurseviPage() {
   let userRole: "KLIJENT" | "EDUKATOR" | null = null;
-  let userId: string | null = null; 
+  let userId: string | null = null;
 
   try {
     const cookieStore = await cookies();
@@ -40,7 +40,7 @@ export default async function KurseviPage() {
     .from(kurs)
     .leftJoin(korisnik, eq(kurs.edukator, korisnik.id));
 
-  
+
   const sviKursevi = userRole === "EDUKATOR" && userId
     ? await baseQuery.where(eq(kurs.edukator, userId))
     : await baseQuery;

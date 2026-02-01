@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { korisnik } from "./schema";
-import {kurs} from "./schema";
+import { kurs } from "./schema";
 import { napredak } from "./schema";
 import { kupljeniKursevi } from "./schema";
 import { videoLekcija } from "./schema";
@@ -13,22 +13,22 @@ const hash3 = await bcrypt.hash("1235", 10);
 
 await db.insert(korisnik).values([
     {
-    ime: "Tijana",
-    prezime: "Milosavljevic",
-    email: "tesla@gmail.com",
-    lozinka: hash1,
-    uloga: "ADMIN",
+        ime: "Tijana",
+        prezime: "Milosavljević",
+        email: "tijana@gmail.com",
+        lozinka: hash1,
+        uloga: "ADMIN",
     },
     {
-    ime: "Andrijana",
-    prezime: "Opacic",
-    email: "andrijana@gmail.com",
-    lozinka: hash2,
-    uloga:"EDUKATOR"
+        ime: "Andrijana",
+        prezime: "Opačić",
+        email: "andrijana@gmail.com",
+        lozinka: hash2,
+        uloga: "EDUKATOR"
     },
     {
-        ime: "Andjela",
-        prezime: "Nikolic",
+        ime: "Anđela",
+        prezime: "Nikolić",
         email: "andjela@gmail.com",
         lozinka: hash3,
         uloga: "KLIJENT"
@@ -38,16 +38,16 @@ await db.insert(korisnik).values([
 
 
 await db.insert(kurs).values({
-    
-        naziv:"Kurs za pocetnike",
-        opis:"Ovaj kurs je namenjen pocetnicama.",
-        cena: "15000",
-        kategorija:"beginner",
-        slika: "https://www.bozidarac.rs/data/profesionalno_sminkanje_kurs_beo.png",
-        edukator: "98ba1e58-845a-4056-beb5-2ec29c159168"
 
-    });
+    naziv: "Kurs za početnike",
+    opis: "Ovaj kurs je namenjen početnicima.",
+    cena: "50",
+    kategorija: "šminka",
+    slika: "",
+    edukator: "98ba1e58-845a-4056-beb5-2ec29c159168"
 
-    
+});
+
+
 
 process.exit(0);

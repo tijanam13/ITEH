@@ -34,7 +34,7 @@ export default async function KursGledanjePage({
     .select()
     .from(videoLekcija)
     .where(eq(videoLekcija.kursId, kursId))
-    .orderBy(asc(videoLekcija.naziv));
+    .orderBy(asc(videoLekcija.poredak));
 
   let inicijalniNapredak: string[] = [];
   if (korisnikId && lekcije.length > 0) {
