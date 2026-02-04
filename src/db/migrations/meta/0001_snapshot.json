@@ -1,6 +1,6 @@
 {
-  "id": "3f9b30ea-324f-4506-92e3-ef3babcd9a88",
-  "prevId": "300b5264-47ed-4acb-bd1e-e2aa06f10161",
+  "id": "924d1637-def3-4dce-b771-30c72659967a",
+  "prevId": "273530fd-479b-40f2-a7ca-4abea5e78817",
   "version": "7",
   "dialect": "***REMOVED***ql",
   "tables": {
@@ -45,6 +45,19 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
+        },
+        "brojTelefona": {
+          "name": "brojTelefona",
+          "type": "varchar(11)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "datum_registracije": {
+          "name": "datum_registracije",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -56,6 +69,13 @@
           "nullsNotDistinct": false,
           "columns": [
             "email"
+          ]
+        },
+        "korisnik_brojTelefona_unique": {
+          "name": "korisnik_brojTelefona_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "brojTelefona"
           ]
         }
       },
@@ -159,7 +179,7 @@
         },
         "opis": {
           "name": "opis",
-          "type": "varchar(300)",
+          "type": "varchar(1000)",
           "primaryKey": false,
           "notNull": true
         },
@@ -308,7 +328,7 @@
         },
         "opis": {
           "name": "opis",
-          "type": "varchar(300)",
+          "type": "varchar(1000)",
           "primaryKey": false,
           "notNull": true
         },
@@ -317,6 +337,13 @@
           "type": "varchar(1000)",
           "primaryKey": false,
           "notNull": true
+        },
+        "poredak": {
+          "name": "poredak",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "kurs_id": {
           "name": "kurs_id",

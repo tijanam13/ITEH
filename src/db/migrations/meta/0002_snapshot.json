@@ -1,6 +1,6 @@
 {
-  "id": "a4fb4256-9fe5-4d61-bf7b-a66fc4a1a0a1",
-  "prevId": "3f9b30ea-324f-4506-92e3-ef3babcd9a88",
+  "id": "b328149a-7f11-4ed2-9240-fedf2a16a735",
+  "prevId": "924d1637-def3-4dce-b771-30c72659967a",
   "version": "7",
   "dialect": "***REMOVED***ql",
   "tables": {
@@ -45,6 +45,13 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
+        },
+        "datum_registracije": {
+          "name": "datum_registracije",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -317,6 +324,13 @@
           "type": "varchar(1000)",
           "primaryKey": false,
           "notNull": true
+        },
+        "poredak": {
+          "name": "poredak",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "kurs_id": {
           "name": "kurs_id",

@@ -1,4 +1,4 @@
-CREATE TYPE "public"."uloga" AS ENUM('ADMIN', 'KLIJENT', 'EDUKATOR');--> statement-breakpoint
+CREATE TYPE "public"."uloga" AS ENUM('ADMIN', 'KLIJENT', 'EDUKATOR');
 CREATE TABLE "korisnik" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"ime" varchar(100) NOT NULL,
@@ -8,3 +8,6 @@ CREATE TABLE "korisnik" (
 	"uloga" "uloga" NOT NULL,
 	CONSTRAINT "korisnik_email_unique" UNIQUE("email")
 );
+
+
+
