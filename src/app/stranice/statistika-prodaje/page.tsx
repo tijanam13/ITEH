@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import RoleGuard from "../../components/RoleGuard";
-import { getStatistikaProdajeKurseva } from "@/app/actions/admin";
+import { fetchStatistikaProdaje } from "@/lib/izvestajiClient";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -20,13 +20,17 @@ export default function StatistikaProdajePage() {
 
   useEffect(() => {
     async function fetchData() {
-      const res = await getStatistikaProdajeKurseva();
-      if (res.success) {
-        setData(res.data || []);
-        setUkupno(res.ukupnoPrihod || 0);
-        setUkupnoProdato(res.ukupnoProdato || 0);
-      } else {
-        setError(res.error || "Greška.");
+      try {
+        const res = await fetchStatistikaProdaje();
+        if (res.success) {
+          setData(res.data || []);
+          setUkupno(res.ukupnoPrihod || 0);
+          setUkupnoProdato(res.ukupnoProdato || 0);
+        } else {
+          setError(res.error || "Greška.");
+        }
+      } catch (err: any) {
+        setError(err?.message || "Greška.");
       }
       setLoading(false);
     }

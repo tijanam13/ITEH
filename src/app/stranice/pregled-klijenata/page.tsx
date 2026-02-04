@@ -1,46 +1,30 @@
+"use client";
 import RoleGuard from "../../components/RoleGuard";
-import { db } from "@/db/index";
-import { kupljeniKursevi, kurs, korisnik } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
-import { redirect } from "next/navigation";
+import { useEffect, useState } from "react";
 import PretragaKlijenata from "./pretragaklijenata";
+import { fetchEdukatorKlijenti } from "@/lib/edukatorClient";
 
-export default async function PregledKlijenataPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth")?.value;
-  const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
+export default function PregledKlijenataPage() {
+  const [klijenti, setKlijenti] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!token) redirect("/prijava");
-
-  let edukatorId: string;
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; uloga: string };
-
-    if (decoded.uloga !== "EDUKATOR" && decoded.uloga !== "ADMIN") {
-      redirect("/");
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetchEdukatorKlijenti();
+        if (res.success) {
+          setKlijenti(res.data || []);
+        } else {
+          setError(res.error || "Greška.");
+        }
+      } catch (err: any) {
+        setError(err?.message || "Greška.");
+      }
+      setLoading(false);
     }
-
-    edukatorId = decoded.sub;
-  } catch (err) {
-    redirect("/prijava");
-    return null;
-  }
-
-  const klijenti = await db
-    .select({
-      korisnikId: kupljeniKursevi.korisnikId,
-      ime: korisnik.ime,
-      prezime: korisnik.prezime,
-      email: korisnik.email,
-      brojKurseva: sql<number>`COUNT(${kupljeniKursevi.kursId})`,
-    })
-    .from(kupljeniKursevi)
-    .innerJoin(korisnik, eq(kupljeniKursevi.korisnikId, korisnik.id))
-    .innerJoin(kurs, eq(kupljeniKursevi.kursId, kurs.id))
-    .where(eq(kurs.edukator, edukatorId))
-    .groupBy(kupljeniKursevi.korisnikId, korisnik.ime, korisnik.prezime, korisnik.email);
+    fetchData();
+  }, []);
 
   const ukupnoKlijenata = klijenti.length;
 
@@ -57,7 +41,11 @@ export default async function PregledKlijenataPage() {
             </p>
           </header>
 
-          {klijenti.length === 0 ? (
+          {loading ? (
+            <div>Učitavanje...</div>
+          ) : error ? (
+            <div className="text-red-500">{error}</div>
+          ) : klijenti.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center border-2 border-dashed border-[#E3CAA5]">
               <p className="text-[#AD8B73] text-xl font-semibold">
                 Još uvek niko nije kupio Vaše kurseve.

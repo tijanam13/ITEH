@@ -1,44 +1,34 @@
+"use client";
 import RoleGuard from "../../components/RoleGuard";
-import { db } from "@/db/index";
-import { kupljeniKursevi, kurs, korisnik } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
-import { redirect } from "next/navigation";
 import KupljeniKurseviContent from "../../components/KupljeniKurseviContent";
+import { useEffect, useState } from "react";
+import { fetchKupljeniKursevi } from "@/lib/kupljeniKurseviClient";
 
-export default async function MojiKurseviPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth")?.value;
-  const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
+export default function MojiKurseviPage() {
+  const [kursevi, setKursevi] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!token) redirect("/prijava");
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetchKupljeniKursevi();
+        if (res.success) {
+          setKursevi(res.data || []);
+        } else {
+          setError(res.error || "Greška.");
+        }
+      } catch (err: any) {
+        setError(err?.message || "Greška.");
+      }
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
 
-  let korisnikId: string;
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
-    korisnikId = decoded.sub;
-  } catch (err) {
-    redirect("/prijava");
-    return null;
-  }
-
-  const mojiKursevi = await db
-    .select({
-      id: kurs.id,
-      naziv: kurs.naziv,
-      opis: kurs.opis,
-      slika: kurs.slika,
-      kategorija: kurs.kategorija,
-      edukatorIme: korisnik.ime,
-      edukatorPrezime: korisnik.prezime
-    })
-    .from(kupljeniKursevi)
-    .innerJoin(kurs, eq(kupljeniKursevi.kursId, kurs.id))
-    .innerJoin(korisnik, eq(kurs.edukator, korisnik.id))
-    .where(eq(kupljeniKursevi.korisnikId, korisnikId));
-
-  return (<RoleGuard allowedRoles={["KLIJENT"]}>{
-    <KupljeniKurseviContent pocetniKursevi={mojiKursevi} />}</RoleGuard>
+  return (
+    <RoleGuard allowedRoles={["KLIJENT"]}>
+      <KupljeniKurseviContent pocetniKursevi={kursevi} loading={loading} error={error} />
+    </RoleGuard>
   );
 }

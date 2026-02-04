@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import RoleGuard from "../../components/RoleGuard";
-import { getMesecnaStatistikaKlijenata } from "@/app/actions/admin";
+import { fetchMesecniIzvestaji } from "@/lib/izvestajiClient";
 import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area
@@ -17,11 +17,15 @@ export default function StatistikaKlijenataPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const res = await getMesecnaStatistikaKlijenata();
-      if (res.success) {
-        setData(res.data || []);
-      } else {
-        setError(res.error || "Greška.");
+      try {
+        const res = await fetchMesecniIzvestaji();
+        if (res.success) {
+          setData(res.data || []);
+        } else {
+          setError(res.error || "Greška.");
+        }
+      } catch (err: any) {
+        setError(err?.message || "Greška.");
       }
       setLoading(false);
     }

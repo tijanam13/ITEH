@@ -1,60 +1,30 @@
+"use client";
 import RoleGuard from "../../components/RoleGuard";
-import { db } from "@/db/index";
-import { kupljeniKursevi, kurs, korisnik } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
-import { redirect } from "next/navigation";
+import { useEffect, useState } from "react";
+import { fetchEdukatorProdaja } from "@/lib/edukatorClient";
 import { Mail } from "lucide-react";
 
-export default async function PregledKlijenataPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth")?.value;
-  const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
+export default function PregledProdajeKursevaPage() {
+  const [kurseviSaKlijentima, setKurseviSaKlijentima] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!token) redirect("/prijava");
-
-  let edukatorId: string;
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { sub: string, uloga: string };
-
-    if (decoded.uloga !== "EDUKATOR" && decoded.uloga !== "ADMIN") {
-      redirect("/");
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetchEdukatorProdaja();
+        if (res.success) {
+          setKurseviSaKlijentima(res.data || []);
+        } else {
+          setError(res.error || "Greška.");
+        }
+      } catch (err: any) {
+        setError(err?.message || "Greška.");
+      }
+      setLoading(false);
     }
-
-    edukatorId = decoded.sub;
-  } catch (err) {
-    redirect("/prijava");
-    return null;
-  }
-
-  const kursevi = await db
-    .select({
-      kursId: kurs.id,
-      naziv: kurs.naziv,
-    })
-    .from(kurs)
-    .where(eq(kurs.edukator, edukatorId));
-
-  const kurseviSaKlijentima = await Promise.all(
-    kursevi.map(async (k) => {
-      const klijenti = await db
-        .select({
-          klijentIme: korisnik.ime,
-          klijentPrezime: korisnik.prezime,
-          klijentEmail: korisnik.email,
-          datumKupovine: kupljeniKursevi.datum,
-          metodPlacanja: kupljeniKursevi.metodPlacanja,
-          statusPlacanja: kupljeniKursevi.statusPlacanja,
-        })
-        .from(kupljeniKursevi)
-        .innerJoin(korisnik, eq(kupljeniKursevi.korisnikId, korisnik.id))
-        .where(eq(kupljeniKursevi.kursId, k.kursId))
-        .orderBy(desc(kupljeniKursevi.datum));
-
-      return { ...k, klijenti };
-    })
-  );
+    fetchData();
+  }, []);
 
   return (
     <RoleGuard allowedRoles={["EDUKATOR"]}>

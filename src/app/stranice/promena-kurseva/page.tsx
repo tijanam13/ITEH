@@ -4,11 +4,7 @@ import RoleGuard from "../../components/RoleGuard";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { VideoUpload } from "../../components/VideoUpload";
-import {
-  getKurseviEdukatora,
-  getKursSaLekcijama,
-  izmeniKompletanKurs,
-} from "@/app/actions/kurs";
+import { fetchKursevi, getKursSaLekcijama, updateKurs } from "@/lib/kurseviClient";
 import { validirajLekciju } from "@/app/utils/validacijalekcije";
 import Image from "next/image";
 import {
@@ -44,27 +40,36 @@ export default function IzmeniKursPage() {
   });
 
   useEffect(() => {
-    getKurseviEdukatora().then((res) => {
-      setKursevi(res);
+    fetchKursevi().then((res: any) => {
+      setKursevi(res.kursevi || []);
       const kursIdIzQuery = searchParams.get("kursId");
-      if (kursIdIzQuery && res.find((k: any) => k.id === kursIdIzQuery)) {
+      if (kursIdIzQuery && (res.kursevi || []).find((k: any) => k.id === kursIdIzQuery)) {
         setSelectedKursId(kursIdIzQuery);
       }
-    });
+    }).catch(() => {});
   }, [searchParams]);
 
   useEffect(() => {
-    if (!selectedKursId) return;
-    getKursSaLekcijama(selectedKursId).then((kurs) => {
-      setKursData({
-        naziv: kurs.naziv,
-        opis: kurs.opis,
-        cena: kurs.cena,
-        kategorija: kurs.kategorija,
-        slika: kurs.slika,
-      });
-      setLekcije(kurs.lekcije || []);
-    });
+    if (!selectedKursId) return; // nothing selected
+    let mounted = true;
+    (async () => {
+      try {
+        const kurs = await getKursSaLekcijama(selectedKursId);
+        if (!mounted) return;
+        setKursData({
+          naziv: kurs.naziv,
+          opis: kurs.opis,
+          cena: kurs.cena,
+          kategorija: kurs.kategorija,
+          slika: kurs.slika,
+        });
+        setLekcije(kurs.lekcije || []);
+      } catch (err: any) {
+        setNotification({ message: err?.message || "Greška pri učitavanju kursa.", type: "error" });
+        setSelectedKursId("");
+      }
+    })();
+    return () => { mounted = false; };
   }, [selectedKursId]);
 
   const pomeriLekciju = (index: number, smer: 'gore' | 'dole') => {
@@ -98,8 +103,7 @@ export default function IzmeniKursPage() {
 
     setLoading(true);
     try {
-      const res = await izmeniKompletanKurs({
-        id: selectedKursId,
+      const res = await updateKurs(selectedKursId, {
         ...kursData,
         lekcije,
       });

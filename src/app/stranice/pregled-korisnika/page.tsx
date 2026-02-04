@@ -4,6 +4,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { Mail, User as UserIcon, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../../context/AuthContext";
+import { fetchKorisnici } from "@/lib/korisniciClient";
 
 interface Korisnik {
   id: string;
@@ -42,16 +43,15 @@ export default function PregledKorisnikaPage() {
 
 
   useEffect(() => {
-    async function fetchKorisnici() {
+    async function loadKorisnici() {
       try {
-        const res = await fetch("/api/korisnici"); 
-        const data: Korisnik[] = await res.json();
+        const data = await fetchKorisnici();
         setKorisnici(data);
       } catch (err) {
         console.error(err);
       }
     }
-    fetchKorisnici();
+    loadKorisnici();
   }, []);
 
   const filtrirani = korisnici.filter(

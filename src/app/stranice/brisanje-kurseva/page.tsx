@@ -2,7 +2,7 @@
 
 import RoleGuard from "../../components/RoleGuard";
 import { useEffect, useState } from "react";
-import { getKurseviEdukatora, getKursSaLekcijama, obrisiKurs } from "@/app/actions/kurs";
+import { fetchKursevi, getKursSaLekcijama, obrisiKurs } from "@/lib/kurseviClient";
 import Image from "next/image";
 import {
   Trash2,
@@ -31,9 +31,14 @@ export default function BrisanjeKursevaPage() {
 
   const osveziListu = async () => {
     setLoading(true);
-    const res = await getKurseviEdukatora();
-    setKursevi(res);
-    setLoading(false);
+    try {
+      const res: any = await fetchKursevi();
+      setKursevi(res.kursevi || []);
+    } catch (err) {
+      setNotification({ message: "Greška pri učitavanju liste.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReviewDelete = async (id: string) => {
@@ -52,16 +57,22 @@ export default function BrisanjeKursevaPage() {
   const izvrsiBrisanje = async () => {
     if (!selectedKurs) return;
     setIsDeleting(true);
-    const res = await obrisiKurs(selectedKurs.id);
-
-    if (res.success) {
-      setNotification({ message: "Kurs je uspešno obrisan!", type: "success" });
-      setKursevi(prev => prev.filter(k => k.id !== selectedKurs.id));
-      setSelectedKurs(null);
-    } else {
-      setNotification({ message: res.error || "Greška pri brisanju.", type: "error" });
+    const id = selectedKurs.id;
+    try {
+      const res = await obrisiKurs(id);
+      if (res.success) {
+        setNotification({ message: "Kurs je uspešno obrisan!", type: "success" });
+        setKursevi(prev => prev.filter(k => k.id !== id));
+        setSelectedKurs(null);
+        setTimeout(() => osveziListu(), 400);
+      } else {
+        setNotification({ message: res.error || "Greška pri brisanju.", type: "error" });
+      }
+    } catch {
+      setNotification({ message: "Problem sa serverom.", type: "error" });
+    } finally {
+      setIsDeleting(false);
     }
-    setIsDeleting(false);
   };
 
   return (

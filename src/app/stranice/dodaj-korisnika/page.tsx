@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { createKorisnik } from "@/lib/korisniciClient";
 
 export default function DodajKorisnikaPage() {
   const router = useRouter();
@@ -30,18 +31,12 @@ export default function DodajKorisnikaPage() {
 
     setLoading(true);
     try {
-      const r = await fetch("/api/korisnik", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, uloga: form.uloga }),
-      });
-      const res = await r.json();
-
+      const res = await createKorisnik({ ...form, uloga: form.uloga });
       if (res.success) {
         setNotification({ message: "Korisnik je uspešno dodat!", type: "success" });
         setTimeout(() => router.push("/stranice/pregled-korisnika"), 2000);
       } else {
-        setNotification({ message: res.error!, type: "error" });
+        setNotification({ message: res.error || "Greška pri dodavanju korisnika." , type: "error" });
       }
     } catch {
       setNotification({ message: "Greška na serveru.", type: "error" });

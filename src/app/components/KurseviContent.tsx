@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useCart } from "../context/KorpaContext";
 import {
@@ -19,27 +19,74 @@ import {
   Euro
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getKursSaLekcijama, obrisiKurs } from "@/app/actions/kurs";
+import { fetchKursevi, getKursSaLekcijama, obrisiKurs } from "@/lib/kurseviClient";
 
-export default function KurseviContent({
-  pocetniKursevi,
-  userRole,
-  userId
-}: {
-  pocetniKursevi: any[];
-  userRole: "KLIJENT" | "EDUKATOR" | null;
-  userId?: string | null;
-}) {
-  const [kursevi, setKursevi] = useState(pocetniKursevi);
+export default function KurseviContent() {
+  const [kursevi, setKursevi] = useState<any[]>([]);
+  const [userRole, setUserRole] = useState<"KLIJENT" | "EDUKATOR" | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [selectedKursToDelete, setSelectedKursToDelete] = useState<any | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [loadingCourseDetails, setLoadingCourseDetails] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const { addToCart, cart } = useCart();
   const router = useRouter();
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!selectedCourse) return;
+      if (userRole === "EDUKATOR" && String(selectedCourse.edukatorId) === String(userId)) {
+        setLoadingCourseDetails(true);
+        try {
+          const detalji = await getKursSaLekcijama(selectedCourse.id);
+          if (!mounted) return;
+          setSelectedCourse((prev: any) => ({ ...prev, ...detalji }));
+        } catch (err: any) {
+          setNotification({ message: err?.message || "Greška pri učitavanju detalja kursa.", type: "error" });
+        } finally {
+          if (mounted) setLoadingCourseDetails(false);
+        }
+      }
+    })();
+    return () => { mounted = false; };
+  }, [selectedCourse?.id]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await fetchKursevi();
+        if (mounted) {
+          setKursevi(data.kursevi || []);
+          setUserRole((data.userRole as any) || null);
+          setUserId(data.userId || null);
+        }
+      } catch (err: any) {
+        setNotification({ message: err.message || "Greška pri učitavanju kurseva.", type: "error" });
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="auth-wrap !block min-h-screen !p-0 overflow-y-auto">
+        <div className="max-w-7xl mx-auto p-6 md:p-10">
+          <div className="auth-card text-center py-20">
+            Učitavanje kurseva...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleAddToCart = (k: any) => {
     const vecUKorpi = cart.find((item) => item.id === k.id);
@@ -274,6 +321,28 @@ export default function KurseviContent({
                   <h3 className="text-xs font-bold uppercase tracking-widest text-[--color-primary] mb-2 border-b border-[--color-accent] pb-1">Opis kursa:</h3>
                   <p className="text-[--color-text] leading-relaxed text-sm italic">{selectedCourse.opis}</p>
                 </div>
+
+                {/* Show lessons if available (for edukator after fetch) */}
+                {loadingCourseDetails ? (
+                  <div className="auth-card text-center py-4">Učitavanje detalja kursa...</div>
+                ) : selectedCourse.lekcije && selectedCourse.lekcije.length > 0 ? (
+                  <div className="p-6 rounded-3xl border-2 border-dashed border-[--color-secondary] bg-white/40">
+                    <h2 className="text-lg font-bold text-[--color-primary] text-center italic underline mb-6 uppercase tracking-tight">Sadržaj kursa</h2>
+                    <div className="space-y-3">
+                      {selectedCourse.lekcije.map((l: any, idx: number) => (
+                        <div key={idx} className="flex justify-between items-center bg-[--color-bg] p-4 rounded-2xl border border-[--color-accent] shadow-sm">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-[--color-text]">{l.naziv}</span>
+                            <span className="text-[10px] text-gray-400 italic">Lekcija {idx + 1}</span>
+                          </div>
+                          <span className="text-[10px] font-bold text-[--color-secondary] flex items-center gap-1 uppercase tracking-widest">
+                            <Clock size={14} /> {l.trajanje} sekunde
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               {userRole === "KLIJENT" && (

@@ -5,7 +5,7 @@ import RoleGuard from "../../components/RoleGuard";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { VideoUpload } from "../../components/VideoUpload";
-import { kreirajKompletanKurs } from "@/app/actions/kurs";
+import { createKurs } from "@/lib/kurseviClient";
 import Image from "next/image";
 import { X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
@@ -40,7 +40,7 @@ export default function DodajKursPage() {
 
     setLoading(true);
     try {
-      const rezultat = await kreirajKompletanKurs({ ...kursData, lekcije });
+      const rezultat = await createKurs({ ...kursData, lekcije });
       if (rezultat.success) {
         setNotification({ message: "Kurs je uspešno objavljen!", type: "success" });
         setTimeout(() => router.push("/stranice/svi-kursevi"), 2000);
