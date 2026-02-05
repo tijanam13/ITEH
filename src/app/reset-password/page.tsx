@@ -1,9 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle, Loader2 } from "lucide-react";
+
 export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="auth-wrap flex items-center justify-center min-h-screen">
+          <Loader2 className="animate-spin text-[#AD8B73]" size={48} />
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}
+
+function ResetPasswordContent() {
   const [novaLozinka, setNovaLozinka] = useState("");
   const [potvrda, setPotvrda] = useState("");
   const [loading, setLoading] = useState(false);
@@ -58,7 +73,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="auth-wrap">
         <div className="auth-card text-center">
-          <p className="text-red-500 mb-4">Nevažeći link za resetovanje lozinke.</p>
+          <p className="text-red-500 mb-4 font-bold">Nevažeći ili istekao link za resetovanje lozinke.</p>
           <button onClick={() => router.push("/login")} className="auth-btn">Nazad na prijavu</button>
         </div>
       </div>
@@ -67,7 +82,6 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="auth-wrap">
-
       {showSuccess && (
         <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black/40 backdrop-blur-sm p-4">
           <div className="auth-card flex flex-col items-center text-center animate-in zoom-in duration-300 max-w-sm">
@@ -91,7 +105,8 @@ export default function ResetPasswordPage() {
             Nova Lozinka
           </h2>
           <p className="text-sm font-medium italic" style={{ color: "#CEAB93" }}>
-            Postavite novu lozinku za nalog: <br /><strong>{email}</strong>
+            Postavite novu lozinku za nalog: <br />
+            <span className="text-[--color-primary] font-bold">{email}</span>
           </p>
         </div>
 
@@ -122,7 +137,7 @@ export default function ResetPasswordPage() {
           </div>
           <button type="submit" disabled={loading} className="auth-btn">
             {loading ? (
-              <Loader2 className="animate-spin" />
+              <Loader2 className="animate-spin mx-auto" size={24} />
             ) : (
               "Sačuvaj novu lozinku"
             )}

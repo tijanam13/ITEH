@@ -1,0 +1,60 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dl92knsrf
+        - NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=default_preset
+        - NEXT_PUBLIC_APP_URL=http://localhost:3000
+        - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+    container_name: nextjs_app_sminkanje
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: ***REMOVED***ql://***REMOVED***:***REMOVED***@db:5432/kursevi_sminkanja
+      NODE_ENV: production
+      JWT_SECRET: ***REMOVED***
+      NEXTAUTH_SECRET: ***REMOVED***
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dl92knsrf
+      NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: default_preset
+      STRIPE_SECRET_KEY: ***REMOVED***
+      STRIPE_WEBHOOK_SECRET: ***REMOVED***
+    depends_on:
+      - db
+    networks:
+      - app_network
+
+  stripe:
+    image: stripe/stripe-cli
+    container_name: stripe_cli_sminkanje
+    command: >
+      listen --forward-to web:3000/api/webhook  --api-key ***REMOVED***
+    depends_on:
+      - web
+    networks:
+      - app_network
+
+  db:
+    image: ***REMOVED***:15-alpine
+    container_name: ***REMOVED***_db_sminkanje
+    restart: always
+    environment:
+      POSTGRES_USER: ***REMOVED***
+      POSTGRES_PASSWORD: ***REMOVED***
+      POSTGRES_DB: kursevi_sminkanja
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/***REMOVED***ql/data
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  pgdata:

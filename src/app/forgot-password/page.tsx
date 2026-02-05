@@ -1,10 +1,10 @@
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordSadrzaj() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -68,7 +68,14 @@ export default function ForgotPasswordPage() {
           </div>
 
           <button type="submit" disabled={loading} className="auth-btn">
-            {loading ? "Slanje..." : "Pošalji link"}
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="animate-spin" size={18} />
+                Slanje...
+              </div>
+            ) : (
+              "Pošalji link"
+            )}
           </button>
         </form>
 
@@ -79,5 +86,17 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="auth-wrap flex items-center justify-center">
+        <Loader2 className="animate-spin text-[--color-primary]" size={40} />
+      </div>
+    }>
+      <ForgotPasswordSadrzaj />
+    </Suspense>
   );
 }

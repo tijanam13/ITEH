@@ -3,19 +3,30 @@ import Stripe from "stripe";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
 
 export async function POST(req: Request) {
   try {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      console.error("Stripe tajni ključ nedostaje u .env fajlu!");
+      return NextResponse.json({ error: "Greška u konfiguraciji servera" }, { status: 500 });
+    }
+
+    const stripe = new Stripe(secretKey);
     const { items } = await req.json();
 
     const cookieStore = await cookies();
     const token = cookieStore.get("auth")?.value;
     if (!token) return NextResponse.json({ error: "Niste ulogovani" }, { status: 401 });
 
-    const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
-    const korisnikId = decoded.sub;
+    let korisnikId: string;
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
+      korisnikId = decoded.sub;
+    } catch {
+      return NextResponse.json({ error: "Nevažeća sesija" }, { status: 401 });
+    }
 
     const lineItems = items.map((item: any) => ({
       price_data: {

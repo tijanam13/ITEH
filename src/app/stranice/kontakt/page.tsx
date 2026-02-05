@@ -1,11 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
-import { FaInstagram, FaFacebook, FaPhone, FaEnvelope, FaCheckCircle } from "react-icons/fa";
+import React, { useState, Suspense } from "react";
+import { FaPhone, FaEnvelope, FaCheckCircle } from "react-icons/fa";
+import { Loader2 } from "lucide-react";
 
 type FormStatus = "IDLE" | "SUBMITTING" | "SUCCESS" | "ERROR";
 
 export default function Kontakt() {
+  return (
+
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#E3CAA5] flex items-center justify-center">
+          <Loader2 className="animate-spin text-[#AD8B73]" size={50} />
+        </div>
+      }
+    >
+      <KontaktSadrzaj />
+    </Suspense>
+
+  );
+}
+
+function KontaktSadrzaj() {
   const [status, setStatus] = useState<FormStatus>("IDLE");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -55,7 +72,7 @@ export default function Kontakt() {
 
         <div className="auth-card !max-w-none md:!max-w-[500px] mx-auto">
           {status === "SUCCESS" ? (
-            <div className="text-center py-10">
+            <div className="text-center py-10 animate-in zoom-in duration-300">
               <FaCheckCircle className="text-7xl text-green-500 mx-auto mb-4" />
               <h2 className="text-3xl font-black italic text-[#AD8B73]">Hvala vam!</h2>
               <p className="text-[#CEAB93] mt-2 font-medium">Poruka je uspešno poslata.</p>
@@ -78,8 +95,16 @@ export default function Kontakt() {
                   <textarea name="PORUKA" rows={4} className="auth-input resize-none" placeholder="Kako mogu da vam pomognem?" required></textarea>
                 </div>
                 <button type="submit" disabled={status === "SUBMITTING"} className="auth-btn">
-                  {status === "SUBMITTING" ? "Slanje..." : "Pošalji Poruku"}
+                  {status === "SUBMITTING" ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="animate-spin" size={20} />
+                      Slanje...
+                    </div>
+                  ) : "Pošalji Poruku"}
                 </button>
+                {status === "ERROR" && (
+                  <p className="text-red-500 text-sm font-bold text-center">Došlo je do greške. Pokušajte opet.</p>
+                )}
               </form>
             </>
           )}

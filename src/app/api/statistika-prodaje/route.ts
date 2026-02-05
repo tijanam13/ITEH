@@ -3,9 +3,13 @@ import { getStatistikaProdajeKurseva } from "@/app/actions/admin";
 
 export async function GET() {
   const res = await getStatistikaProdajeKurseva();
+
   if (res.success) {
-    return NextResponse.json({ success: true, ...res });
+    return NextResponse.json(res);
   } else {
-    return NextResponse.json({ success: false, error: res.error }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: res.error },
+      { status: 500 }
+    );
   }
 }

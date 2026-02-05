@@ -6,10 +6,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-screen">Učitavanje...</div>}>
+    <Suspense
+      fallback={
+        <div className="auth-wrap flex items-center justify-center min-h-screen">
+          <Loader2 className="animate-spin text-[--color-primary]" size={48} />
+        </div>
+      }
+    >
       <LoginFormContent />
     </Suspense>
   );
@@ -46,9 +53,13 @@ function LoginFormContent() {
       if (callbackUrl) {
         router.push(callbackUrl);
       } else {
-        if (data.user.uloga === "EDUKATOR") router.push("/stranice/pregled-klijenata");
-        else if (data.user.uloga === "KLIJENT") router.push("/stranice/svi-kursevi");
-        else router.push("/");
+        if (data.user.uloga === "EDUKATOR") {
+          router.push("/stranice/pregled-klijenata");
+        } else if (data.user.uloga === "KLIJENT") {
+          router.push("/stranice/svi-kursevi");
+        } else {
+          router.push("/");
+        }
       }
       router.refresh();
     } catch (error: any) {
@@ -114,13 +125,23 @@ function LoginFormContent() {
           </div>
 
           <button type="submit" disabled={loading} className="auth-btn">
-            {loading ? <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : "Prijavi se"}
+            {loading ? (
+              <Loader2 className="animate-spin mx-auto text-white" size={24} />
+            ) : (
+              "Prijavi se"
+            )}
           </button>
         </form>
 
         <div className="mt-8 text-center text-sm border-t border-[#E3CAA5]/30 pt-6">
           <p style={{ color: "#CEAB93" }}>
-            Nemate nalog? <Link href="/register" className="font-black underline decoration-2 underline-offset-4 text-[#AD8B73]">Registrujte se</Link>
+            Nemate nalog?{" "}
+            <Link
+              href="/register"
+              className="font-black underline decoration-2 underline-offset-4 text-[#AD8B73]"
+            >
+              Registrujte se
+            </Link>
           </p>
         </div>
       </div>

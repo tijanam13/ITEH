@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, Suspense } from "react";
 import { Mail, User as UserIcon, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../../context/AuthContext";
@@ -37,10 +37,21 @@ function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
 }
 
 export default function PregledKorisnikaPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FFFBE9] flex justify-center items-center text-[#AD8B73] font-bold">
+        Učitavanje...
+      </div>
+    }>
+      <PregledKorisnikaContent />
+    </Suspense>
+  );
+}
+
+function PregledKorisnikaContent() {
   const [korisnici, setKorisnici] = useState<Korisnik[]>([]);
   const [query, setQuery] = useState("");
   const router = useRouter();
-
 
   useEffect(() => {
     async function loadKorisnici() {
@@ -61,7 +72,6 @@ export default function PregledKorisnikaPage() {
       k.email.toLowerCase().includes(query.toLowerCase())
   );
 
-  
   const edukatori = filtrirani.filter(k => k.uloga === "EDUKATOR");
   const admini = filtrirani.filter(k => k.uloga === "ADMIN");
   const klijenti = filtrirani.filter(k => k.uloga === "KLIJENT");
@@ -83,108 +93,111 @@ export default function PregledKorisnikaPage() {
             className="w-full p-4 rounded-3xl border-2 border-[#E3CAA5] focus:outline-none focus:ring-2 focus:ring-[#AD8B73] bg-white placeholder:text-[#AD8B73] text-[#4a3f35] font-medium"
           />
 
-          
           <div className="bg-white rounded-3xl p-6 shadow-lg border-2 border-[#E3CAA5]">
             <h2 className="text-2xl font-bold text-[#4a3f35] mb-4">Edukatori</h2>
             {edukatori.length === 0 ? (
               <p className="text-[#AD8B73]">Nema edukatora u sistemu.</p>
-              ) : (
-              <table className="w-full text-left border-collapse table-fixed">
-                <thead>
-                  <tr className="bg-[#AD8B73] text-white">
-                    <th className="p-4 font-bold uppercase text-sm w-3/5">Korisnik</th>
-                    <th className="p-4 font-bold uppercase text-sm w-2/5">Email</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E3CAA5]">
-                  {edukatori.map((k) => (
-                    <tr key={k.id} className="hover:bg-[#FFFBE9]/50 transition-colors">
-                      <td className="p-4 flex items-center gap-2 min-w-0">
-                        <div className="w-8 h-8 bg-[#E3CAA5] rounded-full flex items-center justify-center text-[#AD8B73] font-bold flex-none">
-                          {k.ime[0]}{k.prezime[0]}
-                        </div>
-                        <span className="font-medium text-[#4a3f35] truncate">{k.ime} {k.prezime}</span>
-                      </td>
-                      <td className="p-4 text-[#AD8B73]">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="flex-none"><Mail size={16} /></div>
-                          <div className="truncate">{k.email}</div>
-                        </div>
-                      </td>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse table-fixed">
+                  <thead>
+                    <tr className="bg-[#AD8B73] text-white">
+                      <th className="p-4 font-bold uppercase text-sm w-3/5">Korisnik</th>
+                      <th className="p-4 font-bold uppercase text-sm w-2/5">Email</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#E3CAA5]">
+                    {edukatori.map((k) => (
+                      <tr key={k.id} className="hover:bg-[#FFFBE9]/50 transition-colors">
+                        <td className="p-4 flex items-center gap-2 min-w-0">
+                          <div className="w-8 h-8 bg-[#E3CAA5] rounded-full flex items-center justify-center text-[#AD8B73] font-bold flex-none">
+                            {k.ime[0]}{k.prezime[0]}
+                          </div>
+                          <span className="font-medium text-[#4a3f35] truncate">{k.ime} {k.prezime}</span>
+                        </td>
+                        <td className="p-4 text-[#AD8B73]">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex-none"><Mail size={16} /></div>
+                            <div className="truncate">{k.email}</div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
-          
           <div className="bg-white rounded-3xl p-6 shadow-lg border-2 border-[#E3CAA5]">
             <h2 className="text-2xl font-bold text-[#4a3f35] mb-4">Administratori</h2>
             {admini.length === 0 ? (
               <p className="text-[#AD8B73]">Nema administratora u sistemu.</p>
-              ) : (
-              <table className="w-full text-left border-collapse table-fixed">
-                <thead>
-                  <tr className="bg-[#4a5568] text-white">
-                    <th className="p-4 font-bold uppercase text-sm w-3/5">Korisnik</th>
-                    <th className="p-4 font-bold uppercase text-sm w-2/5">Email</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E3CAA5]">
-                  {admini.map((k) => (
-                    <tr key={k.id} className="hover:bg-[#FFFBE9]/50 transition-colors">
-                      <td className="p-4 flex items-center gap-2 min-w-0">
-                        <div className="w-8 h-8 bg-[#E3CAA5] rounded-full flex items-center justify-center text-[#AD8B73] font-bold flex-none">
-                          {k.ime[0]}{k.prezime[0]}
-                        </div>
-                        <span className="font-medium text-[#4a3f35] truncate">{k.ime} {k.prezime}</span>
-                      </td>
-                      <td className="p-4 text-[#AD8B73]">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="flex-none"><Mail size={16} /></div>
-                          <div className="truncate">{k.email}</div>
-                        </div>
-                      </td>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse table-fixed">
+                  <thead>
+                    <tr className="bg-[#4a5568] text-white">
+                      <th className="p-4 font-bold uppercase text-sm w-3/5">Korisnik</th>
+                      <th className="p-4 font-bold uppercase text-sm w-2/5">Email</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#E3CAA5]">
+                    {admini.map((k) => (
+                      <tr key={k.id} className="hover:bg-[#FFFBE9]/50 transition-colors">
+                        <td className="p-4 flex items-center gap-2 min-w-0">
+                          <div className="w-8 h-8 bg-[#E3CAA5] rounded-full flex items-center justify-center text-[#AD8B73] font-bold flex-none">
+                            {k.ime[0]}{k.prezime[0]}
+                          </div>
+                          <span className="font-medium text-[#4a3f35] truncate">{k.ime} {k.prezime}</span>
+                        </td>
+                        <td className="p-4 text-[#AD8B73]">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex-none"><Mail size={16} /></div>
+                            <div className="truncate">{k.email}</div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
-          
           <div className="bg-white rounded-3xl p-6 shadow-lg border-2 border-[#E3CAA5]">
             <h2 className="text-2xl font-bold text-[#4a3f35] mb-4">Klijenti</h2>
             {klijenti.length === 0 ? (
               <p className="text-[#AD8B73]">Nema registrovanih klijenata.</p>
-              ) : (
-              <table className="w-full text-left border-collapse table-fixed">
-                <thead>
-                  <tr className="bg-[#E3CAA5] text-[#4a3f35]">
-                    <th className="p-4 font-bold uppercase text-sm w-3/5">Korisnik</th>
-                    <th className="p-4 font-bold uppercase text-sm w-2/5">Email</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E3CAA5]">
-                  {klijenti.map((k) => (
-                    <tr key={k.id} className="hover:bg-[#FFFBE9]/50 transition-colors">
-                      <td className="p-4 flex items-center gap-2 min-w-0">
-                        <div className="w-8 h-8 bg-[#AD8B73] rounded-full flex items-center justify-center text-white font-bold flex-none">
-                          {k.ime[0]}{k.prezime[0]}
-                        </div>
-                        <span className="font-medium text-[#4a3f35] truncate">{k.ime} {k.prezime}</span>
-                      </td>
-                      <td className="p-4 text-[#AD8B73]">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="flex-none"><Mail size={16} /></div>
-                          <div className="truncate">{k.email}</div>
-                        </div>
-                      </td>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse table-fixed">
+                  <thead>
+                    <tr className="bg-[#E3CAA5] text-[#4a3f35]">
+                      <th className="p-4 font-bold uppercase text-sm w-3/5">Korisnik</th>
+                      <th className="p-4 font-bold uppercase text-sm w-2/5">Email</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#E3CAA5]">
+                    {klijenti.map((k) => (
+                      <tr key={k.id} className="hover:bg-[#FFFBE9]/50 transition-colors">
+                        <td className="p-4 flex items-center gap-2 min-w-0">
+                          <div className="w-8 h-8 bg-[#AD8B73] rounded-full flex items-center justify-center text-white font-bold flex-none">
+                            {k.ime[0]}{k.prezime[0]}
+                          </div>
+                          <span className="font-medium text-[#4a3f35] truncate">{k.ime} {k.prezime}</span>
+                        </td>
+                        <td className="p-4 text-[#AD8B73]">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex-none"><Mail size={16} /></div>
+                            <div className="truncate">{k.email}</div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

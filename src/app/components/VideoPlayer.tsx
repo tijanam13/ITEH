@@ -19,7 +19,7 @@ export default function VideoPlayer({
 
   const handleVideoEnded = async () => {
     if (korisnikId && !zavrseneLekcije.includes(aktivnaLekcija.id)) {
-      await sacuvajNapredak(korisnikId, aktivnaLekcija.id);
+      await sacuvajNapredak(aktivnaLekcija.id);
       setZavrseneLekcije((prev) => [...prev, aktivnaLekcija.id]);
     }
   };

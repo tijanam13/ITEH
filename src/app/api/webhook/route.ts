@@ -4,20 +4,24 @@ import Stripe from "stripe";
 import { db } from "@/db/index";
 import { kupljeniKursevi } from "@/db/schema";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
 export async function POST(req: Request) {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!secretKey || !webhookSecret) {
+    console.error("Stripe ključevi nisu definisani u .env fajlu!");
+    return new NextResponse("Server Configuration Error", { status: 500 });
+  }
+
+  const stripe = new Stripe(secretKey);
   const body = await req.text();
-  const signature = (await headers()).get("Stripe-Signature") as string;
+  const headersList = await headers(); 
+  const signature = headersList.get("Stripe-Signature") as string;
 
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err: any) {
     console.error("Webhook Signature Error:", err.message);
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
@@ -25,18 +29,13 @@ export async function POST(req: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-
     const korisnikId = session.metadata?.korisnikId;
     const kursIds = JSON.parse(session.metadata?.kursIds || "[]");
-
     const metoda = session.payment_method_types?.[0] || "card";
 
     if (!korisnikId || kursIds.length === 0) {
-      console.error("Metadata nedostaje u Stripe sesiji");
       return new NextResponse("Missing metadata", { status: 400 });
     }
-
-    console.log(`Pokušaj upisa u bazu za korisnika: ${korisnikId}, kursevi: ${kursIds}`);
 
     try {
       for (const kursId of kursIds) {
@@ -48,7 +47,6 @@ export async function POST(req: Request) {
           datum: new Date(),
         });
       }
-      console.log("Upis u bazu uspešan!");
     } catch (dbError) {
       console.error("Baza podataka ERROR:", dbError);
       return new NextResponse("Database Error", { status: 500 });

@@ -1,4 +1,5 @@
 "use client";
+
 import RoleGuard from "../../components/RoleGuard";
 import { useCart } from "../../context/KorpaContext";
 import Image from "next/image";
@@ -64,7 +65,7 @@ function KorpaContent() {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#FFFBE9] flex flex-col items-center justify-center p-8 text-center">
+      <div className="min-h-screen bg-[#FFFBE9] flex flex-col items-center justify-center p-8 text-center animate-in fade-in">
         <ShoppingBag size={80} className="text-[--color-accent] mb-6 opacity-20" />
         <h1 className="text-3xl font-bold mb-4 text-[--color-primary]">Tvoja korpa je prazna</h1>
         <Link href="/stranice/svi-kursevi" className="auth-btn !w-auto !px-8 flex items-center gap-2">
@@ -75,19 +76,19 @@ function KorpaContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFBE9] p-4 md:p-12">
+    <div className="min-h-screen bg-[#FFFBE9] p-4 md:p-12 animate-in fade-in">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-black mb-10 text-[--color-primary] uppercase tracking-tighter border-b-4 border-[--color-accent] inline-block">Tvoja Korpa</h1>
 
-        <div className="auth-card !max-w-none !p-4 md:!p-10 shadow-2xl animate-in slide-in-from-bottom-5">
+        <div className="auth-card !max-w-none !p-4 md:!p-10 shadow-2xl">
           <div className="space-y-6">
             {cart.map((item) => (
               <div key={item.id} className="flex flex-col sm:flex-row items-center justify-between border-b border-[--color-accent]/30 pb-6 gap-4">
-                <div className="flex items-center gap-6 w-full">
+                <div className="flex items-center gap-6 w-full text-left">
                   <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-[--color-accent] shadow-md flex-shrink-0">
-                    <Image src={item.slika} alt={item.naziv} fill className="object-cover" />
+                    <Image src={item.slika || "/placeholder.jpg"} alt={item.naziv} fill className="object-cover" />
                   </div>
-                  <div className="text-left">
+                  <div>
                     <h3 className="font-bold text-xl text-[--color-text] leading-tight">{item.naziv}</h3>
                     <p className="text-[--color-primary] font-black text-lg mt-1">{item.cena} €</p>
                   </div>
@@ -112,16 +113,14 @@ function KorpaContent() {
             <button
               onClick={handleCheckout}
               disabled={loading}
-              className="auth-btn !py-5 text-xl disabled:opacity-50 shadow-xl max-w-md"
+              className="auth-btn !py-5 text-xl disabled:opacity-50 shadow-xl max-w-md flex items-center justify-center"
             >
               {loading ? (
                 <div className="flex items-center gap-3">
-                  <Loader2 className="animate-spin" /> Povezivanje...
+                  <Loader2 className="animate-spin" /> Povezivanje sa Stripe-om...
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  POTVRDI I PLATI
-                </div>
+                "POTVRDI I PLATI"
               )}
             </button>
           </div>
@@ -134,7 +133,11 @@ function KorpaContent() {
 export default function KorpaPage() {
   return (
     <RoleGuard allowedRoles={["KLIJENT"]}>
-      <Suspense fallback={<div className="min-h-screen bg-[#FFFBE9] flex items-center justify-center italic">Učitavanje korpe...</div>}>
+      <Suspense fallback={
+        <div className="min-h-screen bg-[#FFFBE9] flex items-center justify-center">
+          <Loader2 className="animate-spin text-[--color-primary]" size={48} />
+        </div>
+      }>
         <KorpaContent />
       </Suspense>
     </RoleGuard>

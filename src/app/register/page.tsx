@@ -1,12 +1,27 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="auth-wrap flex items-center justify-center min-h-screen">
+          <Loader2 className="animate-spin text-[--color-primary]" size={48} />
+        </div>
+      }
+    >
+      <RegisterFormContent />
+    </Suspense>
+  );
+}
+
+function RegisterFormContent() {
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -126,7 +141,7 @@ export default function RegisterPage() {
 
           <button type="submit" disabled={loading} className="auth-btn mt-4">
             {loading ? (
-              <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+              <Loader2 className="animate-spin mx-auto text-white" size={24} />
             ) : (
               "Registruj se"
             )}
@@ -136,7 +151,11 @@ export default function RegisterPage() {
         <div className="mt-8 text-center text-sm border-t border-[#E3CAA5]/30 pt-6">
           <p style={{ color: "#CEAB93" }}>
             Već imate nalog?{" "}
-            <Link href="/login" className="font-black underline decoration-2 underline-offset-4" style={{ color: "#AD8B73" }}>
+            <Link
+              href="/login"
+              className="font-black underline decoration-2 underline-offset-4"
+              style={{ color: "#AD8B73" }}
+            >
               Prijavi se
             </Link>
           </p>

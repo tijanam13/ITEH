@@ -39,11 +39,11 @@ export async function createKurs(payload: any) {
   return await res.json();
 }
 
-export async function updateKurs(id: string, payload: any) {
-  const res = await fetch(`/api/kursevi/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Greška pri komunikaciji sa serverom.' }));
-    return { success: false, error: err.error || 'Greška pri izmeni kursa.' };
-  }
-  return await res.json();
+export async function updateKurs(id: string, data: any) {
+  const res = await fetch(`/api/kursevi/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
 }

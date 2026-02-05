@@ -4,14 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, X, User, Tag, PlayCircle } from "lucide-react";
 
-export default function KupljeniKurseviContent({ 
+export default function KupljeniKurseviContent({
   pocetniKursevi = [],
-  loading, 
-  error 
-}: { 
-  pocetniKursevi: any[], 
-  loading?: boolean, 
-  error?: string 
+  loading,
+  error
+}: {
+  pocetniKursevi: any[],
+  loading?: boolean,
+  error?: string
 }) {
   const [search, setSearch] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
@@ -25,7 +25,7 @@ export default function KupljeniKurseviContent({
     <div className="min-h-screen p-8 bg-[#FFFBE9] relative">
       <div className="max-w-7xl mx-auto">
 
-        
+
         <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
           <h1 className="text-4xl font-bold text-[--color-primary] border-b-2 border-[--color-accent] pb-2">
             Moji kupljeni kursevi
@@ -41,13 +41,13 @@ export default function KupljeniKurseviContent({
           </div>
         </div>
 
-        
+
         {loading ? (
           <div className="text-center py-20 text-xl text-[--color-primary]">Učitavanje...</div>
         ) : error ? (
           <div className="text-center py-20 text-red-500 text-xl">{error}</div>
         ) : (
-          
+
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filtriraniKursevi.map((k) => (
@@ -93,7 +93,7 @@ export default function KupljeniKurseviContent({
               ))}
             </div>
 
-           
+
             {selectedCourse && (
               <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[2000] backdrop-blur-sm">
                 <div className="bg-[#FFFBE9] rounded-3xl max-w-2xl w-full p-6 md:p-8 relative shadow-2xl border-2 border-[--color-accent] flex flex-col max-h-[90vh] animate-in zoom-in duration-200">
@@ -144,7 +144,7 @@ export default function KupljeniKurseviContent({
               </div>
             )}
 
-           
+
             {filtriraniKursevi.length === 0 && (
               <div className="text-center py-20 text-[--color-primary] text-xl font-medium">
                 Nemate kupljenih kurseva.

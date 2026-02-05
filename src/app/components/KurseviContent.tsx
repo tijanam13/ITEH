@@ -322,7 +322,6 @@ export default function KurseviContent() {
                   <p className="text-[--color-text] leading-relaxed text-sm italic">{selectedCourse.opis}</p>
                 </div>
 
-                {/* Show lessons if available (for edukator after fetch) */}
                 {loadingCourseDetails ? (
                   <div className="auth-card text-center py-4">Učitavanje detalja kursa...</div>
                 ) : selectedCourse.lekcije && selectedCourse.lekcije.length > 0 ? (

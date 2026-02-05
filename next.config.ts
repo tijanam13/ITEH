@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -12,6 +13,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  output: 'standalone',
 };
 
 export default nextConfig;
