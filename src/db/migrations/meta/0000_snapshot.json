@@ -2,7 +2,7 @@
   "id": "273530fd-479b-40f2-a7ca-4abea5e78817",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
-  "dialect": "***REMOVED***ql",
+  "dialect": "REMOVEDql",
   "tables": {
     "public.korisnik": {
       "name": "korisnik",

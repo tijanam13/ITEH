@@ -40,8 +40,8 @@ services:
       - app_network
 
   db:
-    image: ***REMOVED***:15-alpine
-    container_name: ***REMOVED***_db_sminkanje
+    image: REMOVED:15-alpine
+    container_name: REMOVED_db_sminkanje
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -50,7 +50,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pgdata:/var/lib/***REMOVED***ql/data
+      - pgdata:/var/lib/REMOVEDql/data
     networks:
       - app_network
 
