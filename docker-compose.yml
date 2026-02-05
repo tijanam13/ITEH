@@ -20,8 +20,6 @@ services:
       NEXTAUTH_URL: http://localhost:3000
       NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dl92knsrf
       NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: default_preset
-      STRIPE_SECRET_KEY: ***REMOVED***
-      STRIPE_WEBHOOK_SECRET: ***REMOVED***
     depends_on:
       - db
     networks:
