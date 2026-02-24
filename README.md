@@ -1,37 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Veb aplikacija za kupovinu i gledanje kurseva šminkanja
 
-## Getting Started
+Aplikacija je namenjena za prodaju i gledanje kurseva šminkanja. 
+Ciljevi aplikacije su omogućavanje bezbednog i lakog pristupa kursevima, video lekcijama i dodatnim materijalima, kao i praćenje napretka. Pored toga važno je poboljšanje korisničkog iskustva kroz jednostavnu registraciju, pregled ponude, plaćanje i praćenje kupljenih kurseva, pristup lekcijama nezavisno od vremena i lokacije. Jedan od ciljeva je i obezbeđivanje mesta na tržištu kroz digitalizaciju edukacija.
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Funkcionalnosti aplikacije:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Za klijente:**
+   - Registracija i kreiranje korisničkog naloga
+   - Prijava 
+   - Pregled ponude kurseva: šminka, trajna šminka obrva i usana
+   - Kupovina kurseva i online plaćanje
+   - Gledanje video lekcija u okviru aplikacije
+   - Pregled kupljenih kurseva i praćenje napretka
+**Za edukatore:**
+   - Dodavanje kurseva
+   - Uređivanje kurseva
+   - Brisanje kurseva
+   - Pregled dostupnih kurseva
+   - Postavljanje video lekcija, opisa, cena i materijala
+   - Pregled prodaje kurseva i klijenata
+**Za administratore:**
+   - Mesečni izveštaji o broju klijenata
+   - Statistika prodaje kurseva
+   - Pregled klijenata i edukatora
+   - Dodavanje novih korisnika
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tehnologije
 
-## Learn More
+**Frontend:** Next.js, React, TailwindCSS 
+**Backend:** Next.js
+**Baza podataka:** PostgreSQL
+**Plaćanje:** Stripe
+**Docker:** multi-stage build za izgradnju i deployment
+**Hosting/Deployment:** Docker Compose za lokalni razvoj, 
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Instalacija 
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**1. Kloniranje repozitorijuma:**
 
-## Deploy on Vercel
+git clone https://github.com/username/projekat-sminkanje.git OVDE NAS NAZIV
+cd projekat-sminkanje
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**2. Kreiranje .env fajla sa potrebnim varijablama:**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# internet-tehnologije-2025-appkupovinakursevazasminkanje_2022_0117
+DATABASE_URL=postgres://user:password@db:5432/database
+NODE_ENV=production
+JWT_SECRET=your_jwt_secret
+NEXTAUTH_SECRET=your_nextauth_secret
+NEXTAUTH_URL=http://localhost:3000
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_BASE_URL=http://localhost:3000/api
+STRIPE_SECRET_KEY=your_stripe_key
+NASI PODACI 
+
+**3. Pokretanje Docker-a:**
+
+docker-compose up --build
+
+
+**Aplikacija će biti dostupna na:**
+http://localhost:3000
+
+
+## Struktura projekta
+
+/src - Kod (komponente, stranice, API rute)
+/public - Slike, ikone
+/drizzle.config. - Konfiguracija baze podataka
+Dockerfile - Multi-stage build za Next.js aplikaciju
+docker-compose.yml - Definisanje servisa: web, db, stripe
+
+
+## Git grane
+
+Za razvoj projekta korišćena je Git strategija sa glavnom, integracionom i feature granama. Svaka grana ima specifičnu ulogu u razvoju i omogućava paralelan rad na različitim funkcionalnostima.
+
+main – stabilna, produkciona verzija projekta. Sadrži samo testiran i integrisan kod spreman za deployment.
+
+develop – integraciona grana u koju se spajaju sve feature grane. Ova grana predstavlja radnu verziju projekta pre spajanja u main.
+
+feature/docker – grana namenjena implementaciji Docker podrške. Sadrži: Dockerfile, dockerignore i docker-compose.yml.
+Nakon testiranja i potvrde da kontejnerizacija funkcioniše, ova grana se spaja u develop.
+
+feature/tests – grana za automatizovane testove. Sadrži folder __tests__ sa test fajlovima za backend i frontend funkcionalnosti. Testovi se pokreću kroz CI/CD pipeline i nakon validacije se spajaju u develop.
