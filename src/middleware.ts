@@ -57,8 +57,9 @@ export async function middleware(request: NextRequest) {
 
     try {
       const secret = new TextEncoder().encode(
-        process.env.JWT_SECRET
+        process.env.JWT_SECRET || 'super_tajni_string_123'
       );
+
 
       const { payload } = await jwtVerify(token, secret);
 
@@ -89,12 +90,12 @@ export async function middleware(request: NextRequest) {
         );
       }
 
-      if (
-        pathname.startsWith("/api/klijent") &&
-        uloga !== "KLIJENT"
-      ) {
+      if (pathname.startsWith("/api/klijent") && uloga !== "KLIJENT") {
         return addSecurityHeaders(
-          NextResponse.next()
+          NextResponse.json(
+            { message: "Pristup dozvoljen samo klijentima" },
+            { status: 403 }
+          )
         );
       }
 

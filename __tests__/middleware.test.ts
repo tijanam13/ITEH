@@ -1,4 +1,4 @@
-
+/** @vitest-environment node */
 import { describe, it, expect, vi } from 'vitest';
 import { middleware } from '@/middleware';
 import { NextRequest } from 'next/server';
@@ -8,13 +8,16 @@ const SECRET_STR = 'tvoja_tajna_sifra_123_duga_bar_32_karaktera';
 process.env.JWT_SECRET = SECRET_STR;
 process.env.NEXT_PUBLIC_BASE_URL = 'http://localhost:3000';
 
-const createToken = async (uloga: string, sub: string = 'user-123') => {
+const createToken = async (uloga: string) => {
   const secret = new TextEncoder().encode(SECRET_STR);
-  return await new jose.SignJWT({ sub, email: 'test@example.com', uloga })
+
+  const jwt = await new jose.SignJWT({ uloga })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
     .sign(secret);
+
+  return jwt;
 };
 
 const createRequest = (
