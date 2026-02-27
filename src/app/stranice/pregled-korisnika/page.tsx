@@ -56,25 +56,40 @@ function PregledKorisnikaContent() {
   useEffect(() => {
     async function loadKorisnici() {
       try {
-        const data = await fetchKorisnici();
-        setKorisnici(data);
+        const res = await fetchKorisnici();
+        console.log("Response sa servera:", res);
+
+        if (res && Array.isArray(res.korisnici)) {
+          setKorisnici(res.korisnici);
+        } else if (res && Array.isArray(res.data)) {
+          setKorisnici(res.data);
+        } else if (Array.isArray(res)) {
+          setKorisnici(res);
+        } else {
+          setKorisnici([]);
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Greška pri učitavanju:", err);
+        setKorisnici([]);
       }
     }
     loadKorisnici();
   }, []);
 
-  const filtrirani = korisnici.filter(
-    (k) =>
-      k.ime.toLowerCase().includes(query.toLowerCase()) ||
-      k.prezime.toLowerCase().includes(query.toLowerCase()) ||
-      k.email.toLowerCase().includes(query.toLowerCase())
-  );
+  const filtrirani = Array.isArray(korisnici)
+    ? korisnici.filter((k) => {
+      const s = query.toLowerCase();
+      return (
+        (k.ime?.toLowerCase() || "").includes(s) ||
+        (k.prezime?.toLowerCase() || "").includes(s) ||
+        (k.email?.toLowerCase() || "").includes(s)
+      );
+    })
+    : [];
 
-  const edukatori = filtrirani.filter(k => k.uloga === "EDUKATOR");
-  const admini = filtrirani.filter(k => k.uloga === "ADMIN");
-  const klijenti = filtrirani.filter(k => k.uloga === "KLIJENT");
+  const edukatori = filtrirani.filter(k => k.uloga?.toUpperCase() === "EDUKATOR");
+  const admini = filtrirani.filter(k => k.uloga?.toUpperCase() === "ADMIN");
+  const klijenti = filtrirani.filter(k => k.uloga?.toUpperCase() === "KLIJENT");
 
   return (
     <RoleGuard allowedRoles={["ADMIN"]}>
