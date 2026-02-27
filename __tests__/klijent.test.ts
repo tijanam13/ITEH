@@ -5,11 +5,11 @@ import { NextRequest } from 'next/server';
 import { headers, cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 
-process.env.JWT_SECRET = 'tvoja_tajna_sifra_123';
+process.env.JWT_SECRET = 'super_tajni_string_123';
 process.env.STRIPE_SECRET_KEY = 'sk_test_123456789';
 process.env.NEXT_PUBLIC_BASE_URL = 'http://localhost:3000';
 
-const JWT_SECRET = 'tvoja_tajna_sifra_123';
+const JWT_SECRET = 'super_tajni_string_123';
 
 vi.mock('next/headers', () => ({
     headers: vi.fn(),

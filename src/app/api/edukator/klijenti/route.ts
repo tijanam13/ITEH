@@ -49,7 +49,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *       500:
  *         description: Greška na serveru prilikom dobavljanja podataka.
  */
-export const GET = async function GET() {
+export const GET = async function GET(request: Request) {
   try {
     let token: string | undefined;
 

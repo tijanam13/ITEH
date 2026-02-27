@@ -49,7 +49,7 @@ vi.mock('@/app/actions/korisnik', () => ({
     }),
 }));
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tvoja_tajna_sifra_123';
+const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
 const createValidToken = (uloga: string, sub: string = 'test-admin-id') => {
     return jwt.sign(
