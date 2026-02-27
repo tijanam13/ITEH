@@ -9,15 +9,8 @@ import bcrypt from "bcryptjs";
  * /api/auth/register:
  *   post:
  *     summary: Registracija novog korisnika
- *     description: Kreira novi korisnički nalog u bazi podataka. Lozinka se hešuje pomoću bcrypt-a, a podrazumevana uloga (role) je automatski postavljena na "KLIJENT" radi bezbednosti.
+ *     description: Kreira novi korisnički nalog. JAVNA RUTA. Podrazumevana uloga je "KLIJENT".
  *     tags: [Auth]
- *      parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: Bearer token za autentifikaciju
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -46,19 +39,9 @@ import bcrypt from "bcryptjs";
  *                 example: MojaSigurnaSifra123
  *     responses:
  *       201:
- *         description: Uspešna registracija. Korisnik je kreiran.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                   example: Uspešna registracija!
+ *         description: Uspešna registracija.
  *       400:
- *         description: Loš zahtev. Podaci su nepotpuni, lozinka je prekratka ili email već postoji.
+ *         description: Loš zahtev (email postoji, prekratka lozinka ili nepotpuni podaci).
  *       500:
  *         description: Greška na serveru.
  */

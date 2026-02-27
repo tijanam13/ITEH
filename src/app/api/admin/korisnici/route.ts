@@ -94,7 +94,7 @@ export async function GET() {
       })
       .from(korisnik);
 
-    return NextResponse.json(users);
+return NextResponse.json({ success: true, data: users });
 
   } catch (error) {
     console.error("Greška na serveru (GET /api/admin/korisnici):", error);

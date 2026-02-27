@@ -10,18 +10,15 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 async function getAuth() {
   try {
     let token: string | undefined;
-
     const headersList = await headers();
     const authHeader = headersList.get("authorization");
     if (authHeader?.startsWith("Bearer ")) {
       token = authHeader.substring(7);
     }
-
     if (!token) {
       const cookieStore = await cookies();
       token = cookieStore.get('auth')?.value;
     }
-
     if (!token) return null;
     return jwt.verify(token, JWT_SECRET) as { sub: string, uloga: string };
   } catch (e) {
@@ -33,21 +30,25 @@ async function getAuth() {
  * @swagger
  * /api/kursevi/{id}:
  *   get:
- *     summary: Dobavljanje detalja o određenom kursu
- *     description: Vraća podatke o kursu. Video linkovi lekcija su vidljivi samo vlasniku kursa ili kupcu.
+ *     summary: Detalji određenog kursa
+ *     description: |
+ *       - JAVNO: Vraća podatke o kursu i nazive lekcija.
+ *       - VLASNIK/KUPAC: Vraća i video linkove.
+ *       - ADMIN: Pristup zabranjen (403).
  *     tags: [Kursevi]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID kursa
  *     responses:
  *       200:
- *         description: Uspešno vraćeni podaci o kursu.
+ *         description: Podaci uspešno dobavljeni.
  *       403:
- *         description: Pristup zabranjen za ADMIN ulogu.
+ *         description: Adminima je zabranjen pristup.
  *       404:
  *         description: Kurs nije pronađen.
  */
@@ -61,21 +62,14 @@ export async function GET(
 
     if (auth?.uloga === 'ADMIN') {
       return NextResponse.json(
-        { success: false, error: 'Admini nemaju pristup detaljima kurseva.' },
+        { success: false, error: 'Administratori nemaju pristup detaljima kurseva na ovoj ruti.' },
         { status: 403 }
       );
     }
 
-    const [kursPodaci] = await db
-      .select()
-      .from(kurs)
-      .where(eq(kurs.id, kursId));
-
+    const [kursPodaci] = await db.select().from(kurs).where(eq(kurs.id, kursId));
     if (!kursPodaci) {
-      return NextResponse.json(
-        { success: false, error: 'Kurs nije pronađen.' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Kurs nije pronađen.' }, { status: 404 });
     }
 
     let imaPristupSadrzaju = false;
@@ -84,25 +78,13 @@ export async function GET(
       const [kupovina] = await db
         .select()
         .from(kupljeniKursevi)
-        .where(
-          and(
-            eq(kupljeniKursevi.kursId, kursId),
-            eq(kupljeniKursevi.korisnikId, auth.sub)
-          )
-        )
+        .where(and(eq(kupljeniKursevi.kursId, kursId), eq(kupljeniKursevi.korisnikId, auth.sub)))
         .limit(1);
 
-      if (jeVlasnik || kupovina) {
-        imaPristupSadrzaju = true;
-      }
+      if (jeVlasnik || kupovina) imaPristupSadrzaju = true;
     }
 
-    const prodaje = await db
-      .select()
-      .from(kupljeniKursevi)
-      .where(eq(kupljeniKursevi.kursId, kursId))
-      .limit(1);
-
+    const prodaje = await db.select().from(kupljeniKursevi).where(eq(kupljeniKursevi.kursId, kursId)).limit(1);
     const imaProdaja = prodaje.length > 0;
 
     const sveLekcije = await db
@@ -126,7 +108,6 @@ export async function GET(
         imaProdaja: imaProdaja
       }
     });
-
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -136,8 +117,8 @@ export async function GET(
  * @swagger
  * /api/kursevi/{id}:
  *   patch:
- *     summary: Ažuriranje postojećeg kursa i lekcija
- *     description: Dozvoljava EDUKATORU da izmeni osnovne podatke o kursu i lekcije.
+ *     summary: Izmena kursa i lekcija
+ *     description: Dozvoljava edukatoru (vlasniku) da izmeni osnovne podatke i lekcije.
  *     tags: [Kursevi]
  *     security:
  *       - BearerAuth: []
@@ -154,28 +135,37 @@ export async function GET(
  *           schema:
  *             type: object
  *             properties:
- *               naziv: { type: string }
- *               opis: { type: string }
- *               cena: { type: number }
- *               kategorija: { type: string }
- *               slika: { type: string }
+ *               naziv:
+ *                 type: string
+ *               opis:
+ *                 type: string
+ *               cena:
+ *                 type: number
+ *               kategorija:
+ *                 type: string
+ *               slika:
+ *                 type: string
  *               lekcije:
  *                 type: array
  *                 items:
  *                   type: object
  *                   properties:
- *                     id: { type: string }
- *                     naziv: { type: string }
- *                     opis: { type: string }
- *                     trajanje: { type: string }
- *                     video: { type: string }
+ *                     id:
+ *                       type: string
+ *                       description: ID postojeće lekcije (opciono)
+ *                     naziv:
+ *                       type: string
+ *                     opis:
+ *                       type: string
+ *                     trajanje:
+ *                       type: string
+ *                     video:
+ *                       type: string
  *     responses:
  *       200:
- *         description: Kurs uspešno ažuriran.
- *       401:
- *         description: Niste ulogovani.
+ *         description: Uspešno ažurirano.
  *       403:
- *         description: Nemate dozvolu, jer niste vlasnik kursa.
+ *         description: Niste vlasnik kursa.
  */
 export async function PATCH(
   request: Request,
@@ -193,16 +183,14 @@ export async function PATCH(
     if (!postojeciKurs) return NextResponse.json({ error: 'Kurs ne postoji' }, { status: 404 });
 
     if (String(postojeciKurs.edukator) !== String(auth.sub)) {
-      return NextResponse.json({ error: 'Zabranjen pristup - niste vlasnik kursa' }, { status: 403 });
+      return NextResponse.json({ error: 'Zabranjen pristup - niste vlasnik ovog kursa' }, { status: 403 });
     }
 
     const prodaje = await db.select().from(kupljeniKursevi).where(eq(kupljeniKursevi.kursId, kursId)).limit(1);
     const imaProdaja = prodaje.length > 0;
 
-    // --- SINHRONIZACIJA LEKCIJA (LOGIKA) ---
     let postojeciIds: string[] = [];
     if (lekcije && Array.isArray(lekcije)) {
-      // Čitamo iz 'db' umesto 'tx' da bi testovi prošli zbog mock-ovanja
       const trenutneUBazi = await db
         .select({ id: videoLekcija.id })
         .from(videoLekcija)
@@ -211,7 +199,6 @@ export async function PATCH(
     }
 
     await db.transaction(async (tx) => {
-      // 1. Dinamički update osnovnih podataka
       const updateObj: any = {};
       if (naziv !== undefined) updateObj.naziv = naziv;
       if (opis !== undefined) updateObj.opis = opis;
@@ -256,13 +243,12 @@ export async function PATCH(
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
-
 /**
  * @swagger
  * /api/kursevi/{id}:
  *   delete:
  *     summary: Brisanje kursa
- *     description: Briše kurs ako nema prodaja. Zahteva vlasništvo nad kursom.
+ *     description: Briše kurs ako nema prodaja i ako je korisnik vlasnik.
  *     tags: [Kursevi]
  *     security:
  *       - BearerAuth: []
@@ -274,11 +260,9 @@ export async function PATCH(
  *           type: string
  *     responses:
  *       200:
- *         description: Kurs uspešno obrisan.
+ *         description: Obrisano.
  *       400:
- *         description: Nije moguće obrisati prodat kurs.
- *       403:
- *         description: Zabranjen pristup.
+ *         description: Ne može se brisati prodat kurs.
  */
 export async function DELETE(
   request: Request,
@@ -288,13 +272,13 @@ export async function DELETE(
     const { id: kursId } = await params;
     const auth = await getAuth();
 
-    if (!auth) return NextResponse.json({ success: false, error: 'Niste ulogovani.' }, { status: 401 });
+    if (!auth) return NextResponse.json({ error: 'Niste ulogovani' }, { status: 401 });
 
-    const [provera] = await db.select().from(kurs).where(eq(kurs.id, kursId));
-    if (!provera) return NextResponse.json({ success: false, error: 'Kurs ne postoji.' }, { status: 404 });
+    const [postojeciKurs] = await db.select().from(kurs).where(eq(kurs.id, kursId));
+    if (!postojeciKurs) return NextResponse.json({ error: 'Kurs ne postoji' }, { status: 404 });
 
-    if (String(provera.edukator) !== String(auth.sub)) {
-      return NextResponse.json({ success: false, error: 'Nemate dozvolu.' }, { status: 403 });
+    if (String(postojeciKurs.edukator) !== String(auth.sub)) {
+      return NextResponse.json({ error: 'Zabranjen pristup' }, { status: 403 });
     }
 
     const prodaje = await db.select().from(kupljeniKursevi).where(eq(kupljeniKursevi.kursId, kursId)).limit(1);
@@ -302,7 +286,6 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Nije moguće obrisati kurs koji klijenti već koriste!' }, { status: 400 });
     }
 
-    // Čitamo lekcije van transakcije radi testova
     const lekcije = await db.select({ id: videoLekcija.id }).from(videoLekcija).where(eq(videoLekcija.kursId, kursId));
     const lekcijaIds = lekcije.map(l => l.id);
 

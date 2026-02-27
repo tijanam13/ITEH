@@ -17,7 +17,6 @@ export default function VideoPlayer({
   const [aktivnaLekcija, setAktivnaLekcija] = useState(lekcije[0]);
   const [zavrseneLekcije, setZavrseneLekcije] = useState<string[]>([]);
 
-  // Sinhronizacija sa inicijalnim podacima iz baze
   useEffect(() => {
     if (inicijalniNapredak) {
       const stringifiedNapredak = inicijalniNapredak.map(id => String(id));
@@ -25,48 +24,42 @@ export default function VideoPlayer({
     }
   }, [inicijalniNapredak]);
 
-  // Kalkulacija procenta
   const procenat = lekcije.length
     ? Math.round((zavrseneLekcije.length / lekcije.length) * 100)
     : 0;
 
- // ... unutar VideoPlayer komponente
-const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-async function handleVideoEnded(lekcijaId: any) {
-  const idStr = String(lekcijaId);
-  
-  // LOG ZA DEBUG
-  console.log("Video završen. KorisnikId:", korisnikId, "isSaving:", isSaving);
+  async function handleVideoEnded(lekcijaId: any) {
+    const idStr = String(lekcijaId);
 
-  if (isSaving) return; 
-  if (zavrseneLekcije.includes(idStr)) return;
+    console.log("Video završen. KorisnikId:", korisnikId, "isSaving:", isSaving);
 
-  // Ako korisnikId i dalje ne stiže, privremeno skloni !korisnikId provere 
-  // jer server action ionako sam vadi ID iz tokena.
-  
-  setIsSaving(true);
-  setZavrseneLekcije(prev => [...prev, idStr]);
+    if (isSaving) return;
+    if (zavrseneLekcije.includes(idStr)) return;
 
-  try {
-    console.log("Šaljem napredak na server za lekciju:", idStr);
-    const res = await sacuvajNapredak(idStr);
-    console.log("Rezultat sa servera:", res);
-    
-    if (!res.success) {
-      setZavrseneLekcije(prev => prev.filter(id => id !== idStr));
-      console.error("Greška:", res.error);
+
+    setIsSaving(true);
+    setZavrseneLekcije(prev => [...prev, idStr]);
+
+    try {
+      console.log("Šaljem napredak na server za lekciju:", idStr);
+      const res = await sacuvajNapredak(idStr);
+      console.log("Rezultat sa servera:", res);
+
+      if (!res.success) {
+        setZavrseneLekcije(prev => prev.filter(id => id !== idStr));
+        console.error("Greška:", res.error);
+      }
+    } catch (e) {
+      console.error("Napredak save error", e);
+    } finally {
+      setIsSaving(false);
     }
-  } catch (e) {
-    console.error("Napredak save error", e);
-  } finally {
-    setIsSaving(false);
   }
-}
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-      {/* VIDEO SEKCIJA */}
       <div className="lg:col-span-3">
         <div className="aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-[#AD8B73]">
           <video
@@ -78,7 +71,6 @@ async function handleVideoEnded(lekcijaId: any) {
             onEnded={() => handleVideoEnded(aktivnaLekcija.id)}
             onTimeUpdate={(e) => {
               const v = e.currentTarget;
-              // Ako ostane manje od 0.5 sekundi do kraja, pokreni završetak (sigurnosna mera)
               if (v.currentTime > 0 && v.duration - v.currentTime < 0.5) {
                 handleVideoEnded(aktivnaLekcija.id);
               }
@@ -97,9 +89,7 @@ async function handleVideoEnded(lekcijaId: any) {
         </div>
       </div>
 
-      {/* SIDEBAR SA LEKCIJAMA */}
       <div className="flex flex-col gap-6">
-        {/* PROGRES BAR */}
         <div className="bg-white p-5 rounded-3xl shadow-md border border-[#E3CAA5]">
           <div className="flex justify-between items-end mb-2">
             <span className="text-sm font-bold text-[#4a3f35]">Napredak</span>
@@ -113,7 +103,6 @@ async function handleVideoEnded(lekcijaId: any) {
           </div>
         </div>
 
-        {/* LISTA LEKCIJA */}
         <div className="bg-white p-2 rounded-3xl shadow-md border border-[#E3CAA5]">
           <h3 className="font-bold text-[#4a3f35] border-b border-[#E3CAA5] py-3 mb-2 text-center text-lg">
             Sadržaj kursa

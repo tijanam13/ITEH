@@ -10,15 +10,8 @@ import crypto from "crypto";
  * /api/auth/forgot-password:
  *   post:
  *     summary: Slanje mejla za resetovanje lozinke
- *     description: Prima korisnički email, generiše siguran reset token, čuva ga u bazi i šalje link sa tokenom putem Nodemailer-a.
+ *     description: Prima korisnički email, generiše siguran reset token i šalje instrukcije. JAVNA RUTA.
  *     tags: [Auth]
- *      parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: Bearer token za autentifikaciju
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -34,19 +27,11 @@ import crypto from "crypto";
  *                 example: korisnik@gmail.com
  *     responses:
  *       200:
- *         description: Email uspešno poslat! (Ili generička poruka radi bezbednosti)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Ako nalog postoji, instrukcije su poslate na email.
+ *         description: Ako nalog postoji, instrukcije su poslate.
  *       400:
- *         description: Email je obavezno polje.
+ *         description: Email je obavezan.
  *       500:
- *         description: Greška na serveru (problem sa bazom ili Gmail servisom).
+ *         description: Greška na serveru.
  */
 export const POST = async function POST(req: Request) {
   try {
@@ -68,11 +53,6 @@ export const POST = async function POST(req: Request) {
     const resetToken = crypto.randomBytes(32).toString("hex");
     const expiry = new Date(Date.now() + 3600000);
 
-    console.log("--- DEBUG PASSWORD RESET ---");
-    console.log("Trenutno (Local):", new Date().toLocaleString());
-    console.log("Ističe (Local):", expiry.toLocaleString());
-    console.log("Šaljem u bazu (ISO/UTC):", expiry.toISOString());
-
     await db.update(korisnik)
       .set({ resetToken, resetTokenExpiry: expiry })
       .where(eq(korisnik.id, user.id));
@@ -81,7 +61,7 @@ export const POST = async function POST(req: Request) {
       service: "gmail",
       auth: {
         user: "insensitivo.makeup@gmail.com",
-        pass: process.env.GMAIL_APP_PASSWORD || "nelu spho gnzj fvom",
+        pass: process.env.GMAIL_APP_PASSWORD,
       },
     });
 

@@ -1,6 +1,4 @@
-/**
- * @vitest-environment node
- */
+
 import { describe, it, expect, vi } from 'vitest';
 import { middleware } from '@/middleware';
 import { NextRequest } from 'next/server';
@@ -26,12 +24,12 @@ const createRequest = (
 ) => {
   const url = new URL(`http://localhost:3000${pathname}`);
   const headers = new Headers();
-  
+
   if (options.token && !options.tokenInCookie) {
     headers.set('Authorization', `Bearer ${options.token}`);
   }
 
-  const req = new NextRequest(url, { 
+  const req = new NextRequest(url, {
     method,
     headers: headers
   });

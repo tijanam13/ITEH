@@ -89,7 +89,7 @@ describe('API Edukator - Klijenti ruta', () => {
     const body = await response.json();
 
     expect(response.status).toBe(403);
-    expect(body.error).toContain('Nemate pravo pristupa');
+    expect(body.error).toContain('Zabranjen pristup. Samo edukatori mogu videti svoje klijente.');
   });
 });
 

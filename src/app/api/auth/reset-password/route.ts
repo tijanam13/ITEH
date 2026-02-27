@@ -2,22 +2,15 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/db";
 import { korisnik } from "@/db/schema";
-import { eq, and, gt } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 /**
  * @swagger
  * /api/auth/reset-password:
  *   post:
  *     summary: Resetovanje lozinke pomoću tokena
- *     description: Prima tajni token iz mejla i novu lozinku, proverava da li je token validan i nije istekao, hešuje novu lozinku i ažurira je u bazi.
+ *     description: Prima tajni token iz mejla i novu lozinku. Proverava validnost tokena i ažurira lozinku. JAVNA RUTA.
  *     tags: [Auth]
- *      parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: Bearer token za autentifikaciju
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -39,16 +32,8 @@ import { eq, and, gt } from "drizzle-orm";
  *     responses:
  *       200:
  *         description: Lozinka uspešno ažurirana!
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Lozinka uspešno ažurirana!
  *       400:
- *         description: Link je nevažeći, token je istekao ili lozinka je prekratka.
+ *         description: Link je nevažeći, token je istekao ili je lozinka prekratka.
  *       500:
  *         description: Greška na serveru.
  */

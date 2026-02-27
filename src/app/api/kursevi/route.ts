@@ -3,33 +3,12 @@ import { db } from '@/db/index';
 import { kurs, korisnik, videoLekcija } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
-import { cookies, headers } from 'next/headers';  
+import { cookies, headers } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
-/**
- * @swagger
- * /api/kursevi:
- *   get:
- *     summary: Vraća listu kurseva
- *     description: |
- *       Pravila pristupa:
- *       - GOST ili KLIJENT: Vraća SVE dostupne kurseve u bazi.
- *       - EDUKATOR: Vraća samo kurseve čiji je on autor (vlasnik).
- *       - ADMIN: Pristup zabranjen (403). Admin nema pristup pregledu kurseva na ovoj ruti.
- *     tags: [Kursevi]
- *     responses:
- *       200:
- *         description: Uspešno vraćeni podaci o kursevima.
- *       403:
- *         description: Pristup zabranjen za ulogu ADMIN.
- *       500:
- *         description: Greška na serveru prilikom dobavljanja podataka.
- */
-export async function GET() {
+async function getAuth() {
   try {
-    let userRole: string | null = null;
-    let userId: string | null = null;
     let token: string | undefined;
 
     const headersList = await headers();
@@ -43,18 +22,43 @@ export async function GET() {
       token = cookieStore.get('auth')?.value;
     }
 
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; uloga?: string };
-        userRole = decoded.uloga || null;
-        userId = decoded.sub;
-      } catch (e) {
-      }
-    }
+    if (!token) return null;
+    return jwt.verify(token, JWT_SECRET) as { sub: string; uloga: string };
+  } catch (e) {
+    return null;
+  }
+}
 
-    if (userRole === 'ADMIN') {
+/**
+ * @swagger
+ * /api/kursevi:
+ *   get:
+ *     summary: Vraća listu kurseva (Filtrirano po ulozi)
+ *     description: |
+ *       Pravila pristupa:
+ *       - GOST ili KLIJENT: Vraća sve dostupne kurseve.
+ *       - EDUKATOR: Vraća samo sopstvene kurseve.
+ *       - ADMIN: Pristup zabranjen (403).
+ *     tags: [Kursevi]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista kurseva uspešno dobavljena.
+ *       403:
+ *         description: Adminima je zabranjen pristup ovoj ruti.
+ *       500:
+ *         description: Greška na serveru.
+ */
+// ... (ostali importi)
+
+export async function GET() {
+  try {
+    const auth = await getAuth();
+
+    if (auth?.uloga === 'ADMIN') {
       return NextResponse.json(
-        { success: false, error: 'Administratori nemaju pravo pristupa listi kurseva na ovoj ruti.' }, 
+        { success: false, error: 'Administratori nemaju pravo pristupa listi kurseva na ovoj ruti.' },
         { status: 403 }
       );
     }
@@ -76,25 +80,22 @@ export async function GET() {
 
     let rezultati;
 
-    if (userRole === 'EDUKATOR' && userId) {
-      rezultati = await query.where(eq(kurs.edukator, userId));
+    if (auth?.uloga === 'EDUKATOR') {
+      rezultati = await query.where(eq(kurs.edukator, auth.sub));
     } else {
       rezultati = await query;
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      kursevi: rezultati, 
-      userRole, 
-      userId 
+    return NextResponse.json({
+      success: true,
+      kursevi: rezultati,
+      userRole: auth?.uloga || null,
+      userId: auth?.sub || null
     });
 
   } catch (error: any) {
     console.error('API /kursevi GET error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Greška pri učitavanju kurseva.' }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Greška pri učitavanju kurseva.' }, { status: 500 });
   }
 }
 
@@ -102,16 +103,11 @@ export async function GET() {
  * @swagger
  * /api/kursevi:
  *   post:
- *     summary: Kreiranje novog kursa
- *     description: Dozvoljeno samo korisnicima sa ulogom EDUKATOR. Potrebno je poslati podatke o kursu i listu video lekcija.
+ *     summary: Kreiranje novog kursa i lekcija
+ *     description: Dozvoljeno ISKLJUČIVO edukatorima. Kreira kurs i sve poslate lekcije u jednoj transakciji.
  *     tags: [Kursevi]
  *     security:
  *       - BearerAuth: []
- *     parameters:
- *       - in: header
- *         schema:
- *           type: string
- *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -120,11 +116,11 @@ export async function GET() {
  *             type: object
  *             required: [naziv, opis, cena, kategorija, slika, lekcije]
  *             properties:
- *               naziv: { type: string, example: "Kurs šminkanja za početnike" }
- *               opis: { type: string, example: "Detaljan opis kursa..." }
- *               cena: { type: number, example: 49.99 }
- *               kategorija: { type: string, example: "Osnove" }
- *               slika: { type: string, example: "https://putanja-do-slike.jpg" }
+ *               naziv: { type: string }
+ *               opis: { type: string }
+ *               cena: { type: number }
+ *               kategorija: { type: string }
+ *               slika: { type: string }
  *               lekcije:
  *                 type: array
  *                 items:
@@ -135,85 +131,64 @@ export async function GET() {
  *                     trajanje: { type: string }
  *                     video: { type: string }
  *     responses:
- *       200:
- *         description: Kurs i lekcije su uspešno kreirani u bazi.
+ *       201:
+ *         description: Kurs uspešno kreiran.
  *       401:
- *         description: Niste ulogovani (Nedostaje validan token).
+ *         description: Niste ulogovani.
  *       403:
- *         description: Zabranjen pristup (Uloga nije EDUKATOR).
- *       500:
- *         description: Greška na serveru prilikom čuvanja u bazu.
+ *         description: Nemate ulogu edukatora.
+ *       400:
+ *         description: Nedostaju podaci.
  */
-export const POST = async function POST(request: Request) {
+export async function POST(request: Request) {
   try {
-    let token: string | undefined;
+    const auth = await getAuth();
 
-    const headersList = await headers();
-    const authHeader = headersList.get("authorization");
-    if (authHeader?.startsWith("Bearer ")) {
-      token = authHeader.substring(7);
-    }
-
-    if (!token) {
-      const cookieStore = await cookies();
-      token = cookieStore.get('auth')?.value;
-    }
-
-    if (!token) {
+    if (!auth) {
       return NextResponse.json({ success: false, error: 'Niste ulogovani.' }, { status: 401 });
     }
 
-    let edukatorId: string;
-    let uloga: string;
-
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; uloga: string };
-      edukatorId = decoded.sub;
-      uloga = decoded.uloga;
-    } catch {
-      return NextResponse.json({ success: false, error: 'Sesija nevažeća ili istekla.' }, { status: 401 });
-    }
-
-    if (uloga !== 'EDUKATOR') {
-      return NextResponse.json(
-        { success: false, error: 'Pristup zabranjen. Samo edukatori mogu kreirati kurseve.' }, 
-        { status: 403 }
-      );
+    if (auth.uloga !== 'EDUKATOR') {
+      return NextResponse.json({ success: false, error: 'Pristup zabranjen. Samo edukatori mogu kreirati kurseve.' }, { status: 403 });
     }
 
     const body = await request.json();
     const { naziv, opis, cena, kategorija, slika, lekcije } = body;
 
-    if (!naziv || !opis || !cena || !kategorija || !slika || !lekcije || lekcije.length === 0) {
-      return NextResponse.json({ success: false, error: 'Sva polja su obavezna.' }, { status: 400 });
+
+    if (!naziv || !opis || (cena === undefined || cena === null) || !kategorija || !slika || !lekcije || !Array.isArray(lekcije)) {
+      return NextResponse.json({ success: false, error: 'Sva polja su obavezna, uključujući i listu lekcija.' }, { status: 400 });
     }
 
-    await db.transaction(async (tx) => {
+    const res = await db.transaction(async (tx) => {
       const [noviKurs] = await tx.insert(kurs).values({
         naziv,
         opis,
         cena: cena.toString(),
         kategorija,
         slika,
-        edukator: edukatorId,
+        edukator: auth.sub,
       }).returning();
 
-      const lekcijeZaBazu = lekcije.map((l: any, index: number) => ({
-        naziv: l.naziv,
-        opis: l.opis,
-        trajanje: l.trajanje.toString(),
-        video: l.video,
-        kursId: noviKurs.id,
-        poredak: index,
-      }));
+      if (lekcije.length > 0) {
+        const lekcijeZaBazu = lekcije.map((l: any, index: number) => ({
+          naziv: l.naziv,
+          opis: l.opis,
+          trajanje: l.trajanje.toString(),
+          video: l.video,
+          kursId: noviKurs.id,
+          poredak: index,
+        }));
+        await tx.insert(videoLekcija).values(lekcijeZaBazu);
+      }
 
-      await tx.insert(videoLekcija).values(lekcijeZaBazu);
+      return noviKurs;
     });
 
-    return NextResponse.json({ success: true, message: "Kurs je uspešno kreiran." });
+    return NextResponse.json({ success: true, message: "Kurs je uspešno kreiran.", kursId: res.id }, { status: 201 });
 
   } catch (error: any) {
     console.error('API /kursevi POST error:', error);
-    return NextResponse.json({ success: false, error: 'Greška pri čuvanju podataka.' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Greška pri čuvanju podataka na serveru.' }, { status: 500 });
   }
-};
+}

@@ -14,14 +14,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *     tags: [Korisnici]
  *     security:
  *       - BearerAuth: []
- *
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: Bearer token za autentifikaciju
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:

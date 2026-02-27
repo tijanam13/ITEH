@@ -7,13 +7,11 @@ export async function middleware(request: NextRequest) {
 
   let token: string | undefined;
 
-  // Authorization header token
   const authHeader = request.headers.get("authorization");
   if (authHeader?.startsWith("Bearer ")) {
     token = authHeader.substring(7);
   }
 
-  // Cookie token (najčešće se koristi)
   if (!token) {
     token = request.cookies.get("auth")?.value;
   }
@@ -24,23 +22,19 @@ export async function middleware(request: NextRequest) {
 
   const isLoginPage = pathname === "/login";
 
-  // Redirect ako nije loginovan
   if (isProtectedRoute && !token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Ako je već loginovan → ne treba login page
   if (isLoginPage && token) {
     return NextResponse.redirect(
       new URL("/stranice/svi-kursevi", request.url)
     );
   }
 
-  // API protection
   if (pathname.startsWith("/api")) {
-    // Public API routes
     if (
       pathname.startsWith("/api/auth") ||
       pathname === "/api/webhook"
@@ -48,12 +42,10 @@ export async function middleware(request: NextRequest) {
       return addSecurityHeaders(NextResponse.next());
     }
 
-    // Public GET courses
     if (pathname.startsWith("/api/kursevi") && request.method === "GET") {
       return addSecurityHeaders(NextResponse.next());
     }
 
-    // Auth required for API
     if (!token) {
       return addSecurityHeaders(
         NextResponse.json(
@@ -72,7 +64,6 @@ export async function middleware(request: NextRequest) {
 
       const uloga = payload.uloga as string;
 
-      // Role protection
       if (
         (pathname.startsWith("/api/admin") ||
           pathname.startsWith("/api/api-doc")) &&

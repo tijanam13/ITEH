@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db/index";
+import { db } from "@/db";
 import { kupljeniKursevi, kurs, korisnik } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { cookies, headers } from "next/headers";
@@ -33,19 +33,24 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *                     properties:
  *                       korisnikId:
  *                         type: string
+ *                         example: "u-123-abc"
  *                       ime:
  *                         type: string
+ *                         example: "Ana"
  *                       prezime:
  *                         type: string
+ *                         example: "Anić"
  *                       email:
  *                         type: string
+ *                         example: "ana@example.com"
  *                       brojKurseva:
  *                         type: integer
- *                         description: Ukupan broj kurseva koje je ovaj klijent kupio od trenutno ulogovanog edukatora.
+ *                         description: Ukupan broj kurseva koje je ovaj klijent kupio od ulogovanog edukatora.
+ *                         example: 2
  *       401:
  *         description: Niste ulogovani ili je sesija nevažeća.
  *       403:
- *         description: Zabranjen pristup. Korisnik nema ulogu EDUKATOR.
+ *         description: Zabranjen pristup. Pristup dozvoljen isključivo korisnicima sa ulogom EDUKATOR.
  *       500:
  *         description: Greška na serveru prilikom dobavljanja podataka.
  */
@@ -72,8 +77,11 @@ export const GET = async function GET(request: Request) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; uloga: string };
 
-      if (decoded.uloga !== "EDUKATOR" && decoded.uloga !== "ADMIN") {
-        return NextResponse.json({ success: false, error: "Nemate pravo pristupa." }, { status: 403 });
+      if (decoded.uloga !== "EDUKATOR") {
+        return NextResponse.json({
+          success: false,
+          error: "Zabranjen pristup. Samo edukatori mogu videti svoje klijente."
+        }, { status: 403 });
       }
 
       edukatorId = decoded.sub;
@@ -103,7 +111,7 @@ export const GET = async function GET(request: Request) {
   } catch (error: any) {
     console.error('API /edukator/klijenti error:', error);
     return NextResponse.json(
-      { success: false, error: 'Greška na serveru prilikom dobavljanja podataka.' },
+      { success: false, error: 'Greška na serveru.' },
       { status: 500 }
     );
   }

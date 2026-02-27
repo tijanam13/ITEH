@@ -13,17 +13,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  * /api/klijent/checkout:
  *   post:
  *     summary: Kreiranje Stripe Checkout sesije
- *     description: Inicijalizuje proces plaćanja. DOZVOLJENO SAMO ZA ULOGOVANE KLIJENTE. Generiše Stripe URL za sigurno plaćanje. Cene se validiraju na serveru radi bezbednosti.
+ *     description: Inicijalizuje proces plaćanja. DOZVOLJENO SAMO ZA KLIJENTE. Cene se validiraju na serveru radi bezbednosti.
  *     tags: [Plaćanje]
  *     security:
  *       - BearerAuth: []
- *      parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: Bearer token za autentifikaciju
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -35,7 +28,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *             properties:
  *               items:
  *                 type: array
- *                 description: Lista kurseva (potreban je samo ID)
  *                 items:
  *                   type: object
  *                   properties:
@@ -43,18 +35,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *                       type: string
  *     responses:
  *       200:
- *         description: Uspešno kreirana sesija. Vraća URL na koji treba preusmeriti korisnika.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 url:
- *                   type: string
+ *         description: Uspešno kreirana sesija. Vraća URL za Stripe plaćanje.
  *       401:
  *         description: Niste ulogovani ili je sesija nevažeća.
+ *       403:
+ *         description: Zabranjen pristup (Samo klijenti mogu kupovati kurseve).
  *       400:
- *         description: Neispravni podaci ili kursevi nisu pronađeni.
+ *         description: Korpa je prazna ili kursevi nisu pronađeni.
  *       500:
  *         description: Greška na serveru.
  */
@@ -62,8 +49,7 @@ export const POST = async function POST(req: Request) {
   try {
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
-      console.error("Stripe tajni ključ nedostaje u .env fajlu!");
-      return NextResponse.json({ error: "Greška u konfiguraciji servera" }, { status: 500 });
+      return NextResponse.json({ error: "Greška u konfiguraciji Stripe-a" }, { status: 500 });
     }
 
     const stripe = new Stripe(secretKey);
@@ -74,14 +60,12 @@ export const POST = async function POST(req: Request) {
     }
 
     let token: string | undefined;
-
     const headersList = await headers();
     const authHeader = headersList.get("authorization");
+
     if (authHeader?.startsWith("Bearer ")) {
       token = authHeader.substring(7);
-    }
-
-    if (!token) {
+    } else {
       const cookieStore = await cookies();
       token = cookieStore.get("auth")?.value;
     }
@@ -90,17 +74,23 @@ export const POST = async function POST(req: Request) {
 
     let korisnikId: string;
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
+      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string, uloga: string };
+
+      if (decoded.uloga !== "KLIJENT") {
+        return NextResponse.json({ error: "Samo klijenti mogu obavljati kupovinu." }, { status: 403 });
+      }
+
       korisnikId = decoded.sub;
     } catch {
       return NextResponse.json({ error: "Nevažeća sesija" }, { status: 401 });
     }
 
     const ids = items.map((i: any) => i.id.toString());
+
     const kurseviIzBaze = await db.select().from(kurs).where(inArray(kurs.id, ids));
 
     if (kurseviIzBaze.length === 0) {
-      return NextResponse.json({ error: "Kursevi nisu pronađeni u bazi" }, { status: 400 });
+      return NextResponse.json({ error: "Kursevi nisu pronađeni" }, { status: 400 });
     }
 
     const lineItems = kurseviIzBaze.map((k) => ({
@@ -130,6 +120,6 @@ export const POST = async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
     console.error("Checkout Error:", err.message);
-    return NextResponse.json({ error: "Došlo je do greške pri kreiranju plaćanja." }, { status: 500 });
+    return NextResponse.json({ error: "Greška prilikom kreiranja plaćanja." }, { status: 500 });
   }
 };

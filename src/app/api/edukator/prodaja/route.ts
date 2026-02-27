@@ -56,7 +56,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *       401:
  *         description: Niste ulogovani ili je sesija nevažeća.
  *       403:
- *         description: Zabranjen pristup. Korisnik nema ulogu EDUKATOR.
+ *         description: Zabranjen pristup. Pristup dozvoljen isključivo edukatorima.
  *       500:
  *         description: Greška na serveru prilikom obrade podataka.
  */
@@ -82,9 +82,14 @@ export async function GET() {
     let edukatorId: string;
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { sub: string, uloga: string };
-      if (decoded.uloga !== "EDUKATOR" && decoded.uloga !== "ADMIN") {
-        return NextResponse.json({ success: false, error: "Nemate pravo pristupa." }, { status: 403 });
+
+      if (decoded.uloga !== "EDUKATOR") {
+        return NextResponse.json({
+          success: false,
+          error: "Zabranjen pristup. Ovaj izveštaj je namenjen isključivo edukatorima."
+        }, { status: 403 });
       }
+
       edukatorId = decoded.sub;
     } catch (err) {
       return NextResponse.json({ success: false, error: "Sesija nevažeća." }, { status: 401 });

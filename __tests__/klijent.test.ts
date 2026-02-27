@@ -133,7 +133,7 @@ describe('API Klijent - Kupljeni Kursevi (GET)', () => {
         expect(Array.isArray(body.data)).toBe(true);
     });
 
-    it('Trebalo bi vratiti 200 sa listom kurseva ako je ADMIN ulogovan', async () => {
+    it('Trebalo bi vratiti 403 ako pokuša da pristupi ADMIN (pristup dozvoljen samo klijentima)', async () => {
         const token = createValidToken('ADMIN');
         (headers as any).mockReturnValue(Promise.resolve({
             get: vi.fn().mockReturnValue(`Bearer ${token}`)
@@ -146,9 +146,10 @@ describe('API Klijent - Kupljeni Kursevi (GET)', () => {
         const response = await (GetKupljeniKursevi as any)(req);
         const body = await response.json();
 
-        expect(response.status).toBe(200);
-        expect(body.success).toBe(true);
+        expect(response.status).toBe(403);
+
     });
+
 });
 
 describe('API Klijent - Checkout (POST)', () => {

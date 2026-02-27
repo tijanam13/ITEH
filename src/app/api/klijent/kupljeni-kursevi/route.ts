@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  * /api/klijent/kupljeni-kursevi:
  *   get:
  *     summary: Lista kupljenih kurseva ulogovanog korisnika
- *     description: Vraća listu svih kurseva koje je trenutno ulogovani klijent kupio. DOZVOLJENO SAMO ZA ULOGOVANE KORISNIKE.
+ *     description: Vraća listu svih kurseva koje je trenutno ulogovani klijent kupio. DOZVOLJENO SAMO ZA KLIJENTE.
  *     tags: [Kursevi]
  *     security:               
  *       - BearerAuth: []      
@@ -31,24 +31,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *                   items:
  *                     type: object
  *                     properties:
- *                       id:
- *                         type: string
- *                       naziv:
- *                         type: string
- *                       opis:
- *                         type: string
- *                       slika:
- *                         type: string
- *                       kategorija:
- *                         type: string
- *                       edukatorIme:
- *                         type: string
- *                       edukatorPrezime:
- *                         type: string
+ *                       id: type: string
+ *                       naziv: type: string
+ *                       opis: type: string
+ *                       slika: type: string
+ *                       kategorija: type: string
+ *                       edukatorIme: type: string
+ *                       edukatorPrezime: type: string
  *       401:
  *         description: Niste ulogovani ili je sesija nevažeća.
  *       403:
- *         description: Zabranjen pristup (Pristup dozvoljen samo klijentima).
+ *         description: Zabranjen pristup (Pristup dozvoljen isključivo klijentima).
  *       500:
  *         description: Greška na serveru prilikom dobavljanja podataka.
  */
@@ -74,10 +67,15 @@ export const GET = async function GET(req: Request) {
     let korisnikId: string;
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { sub: string, uloga: string };
+
+      if (decoded.uloga !== "KLIJENT") {
+        return NextResponse.json({
+          success: false,
+          error: "Zabranjen pristup. Ova stranica je namenjena isključivo klijentima."
+        }, { status: 403 });
+      }
+
       korisnikId = decoded.sub;
-
-
-
     } catch (err) {
       return NextResponse.json({ success: false, error: "Sesija nevažeća ili je istekla." }, { status: 401 });
     }

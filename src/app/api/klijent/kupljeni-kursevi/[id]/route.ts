@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  * /api/klijent/kupljeni-kursevi/{id}:
  *   get:
  *     summary: Detalji kupljenog kursa, lekcije i napredak 
- *     description: Vraća podatke o kursu samo ako je ulogovani klijent zaista kupio taj kurs. DOZVOLJENO SAMO ZA ULOGOVANE KORISNIKE.
+ *     description: Vraća podatke o kursu samo ako je ulogovani klijent zaista kupio taj kurs. DOZVOLJENO SAMO ZA KLIJENTE.
  *     tags: [Kursevi]
  *     security:
  *       - BearerAuth: []
@@ -26,10 +26,30 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *     responses:
  *       200:
  *         description: Uspešno dobavljeni podaci.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 kurs:
+ *                   type: object
+ *                 lekcije:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 inicijalniNapredak:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 korisnikId:
+ *                   type: string
+ *                   description: ID trenutno ulogovanog korisnika (potreban za napredak).
  *       401:
  *         description: Niste ulogovani.
  *       403:
- *         description: Zabranjen pristup, jer kurs nije kupljen.
+ *         description: Zabranjen pristup (Kurs nije kupljen ili niste KLIJENT).
  *       404:
  *         description: Kurs nije pronađen.
  */
@@ -60,7 +80,12 @@ export async function GET(
     let korisnikId = "";
     try {
       if (!token) throw new Error("Token nedostaje");
-      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
+      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string, uloga: string };
+
+      if (decoded.uloga !== "KLIJENT") {
+        return NextResponse.json({ success: false, error: "Zabranjen pristup. Samo klijenti mogu pristupiti kupljenom sadržaju." }, { status: 403 });
+      }
+
       korisnikId = decoded.sub;
     } catch (e) {
       return NextResponse.json({ success: false, error: "Niste ulogovani ili je sesija nevažeća." }, { status: 401 });
@@ -119,8 +144,7 @@ export async function GET(
       kurs: kursPodaci,
       lekcije,
       inicijalniNapredak,
-      korisnikId: korisnikId 
-
+      korisnikId: korisnikId
     });
 
   } catch (error: any) {

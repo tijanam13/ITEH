@@ -10,16 +10,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 /**
  * @swagger
  * /api/auth/login:
+ *   post:
  *     summary: Prijava korisnika (Login)
- *     description: Autentifikuje korisnika, generiše JWT i postavlja ga u HTTP-only kuki. Token se NE vraća u JSON telu radi veće bezbednosti.
+ *     description: Autentifikuje korisnika i postavlja JWT u HTTP-only kolačić (cookie). JAVNA RUTA.
  *     tags: [Auth]
- *      parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: Bearer token za autentifikaciju
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -39,7 +33,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *                 example: Sifra123!
  *     responses:
  *       200:
- *         description: Uspešna prijava. Podaci o korisniku su vraćeni, a token je postavljen u kuki.
+ *         description: Uspešna prijava.
  *         content:
  *           application/json:
  *             schema:
@@ -49,19 +43,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
  *                   type: boolean
  *                 user:
  *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     ime:
- *                       type: string
- *                     prezime:
- *                       type: string
- *                     email:
- *                       type: string
- *                     uloga:
- *                       type: string
- *       400:
- *         description: Nisu poslati svi potrebni podaci.
  *       401:
  *         description: Pogrešan email ili lozinka.
  *       500:
