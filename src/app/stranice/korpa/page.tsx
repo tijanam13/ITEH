@@ -22,30 +22,34 @@ function KorpaContent() {
   }, [searchParams, clearCart]);
 
   const handleCheckout = async () => {
-    if (cart.length === 0) return;
-    setLoading(true);
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart }),
-      });
+  if (cart.length === 0) return;
 
-      const data = await response.json();
+  setLoading(true);
 
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "Greška prilikom pokretanja plaćanja.");
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error("Stripe error:", error);
-      alert("Došlo je do greške. Pokušajte ponovo.");
-      setLoading(false);
+  try {
+    const response = await fetch("/api/klijent/checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ items: cart }),
+    });
+
+    const data = await response.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert(data.error || "Greška prilikom pokretanja plaćanja.");
     }
-  };
 
+  } catch (error) {
+    console.error("Stripe error:", error);
+    alert("Došlo je do greške. Pokušajte ponovo.");
+  }
+
+  setLoading(false);
+};
   if (searchParams.get("success")) {
     return (
       <div className="min-h-screen bg-[#FFFBE9] flex flex-col items-center justify-center p-8 text-center animate-in fade-in">

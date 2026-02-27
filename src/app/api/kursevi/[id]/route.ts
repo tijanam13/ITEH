@@ -4,7 +4,6 @@ import { kurs, videoLekcija, kupljeniKursevi, napredak } from '@/db/schema';
 import { eq, inArray, asc, and } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { cookies, headers } from 'next/headers';
-import { csrf } from '@/lib/csrf';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
@@ -61,24 +60,36 @@ export async function GET(
     const auth = await getAuth();
 
     if (auth?.uloga === 'ADMIN') {
-      return NextResponse.json({ success: false, error: 'Admini nemaju pristup detaljima kurseva.' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'Admini nemaju pristup detaljima kurseva.' },
+        { status: 403 }
+      );
     }
 
-    const [kursPodaci] = await db.select().from(kurs).where(eq(kurs.id, kursId));
-    if (!kursPodaci) return NextResponse.json({ success: false, error: 'Kurs nije pronađen.' }, { status: 404 });
+    const [kursPodaci] = await db
+      .select()
+      .from(kurs)
+      .where(eq(kurs.id, kursId));
+
+    if (!kursPodaci) {
+      return NextResponse.json(
+        { success: false, error: 'Kurs nije pronađen.' },
+        { status: 404 }
+      );
+    }
 
     let imaPristupSadrzaju = false;
-
     if (auth) {
       const jeVlasnik = String(kursPodaci.edukator) === String(auth.sub);
-
       const [kupovina] = await db
         .select()
         .from(kupljeniKursevi)
-        .where(and(
-          eq(kupljeniKursevi.kursId, kursId),
-          eq(kupljeniKursevi.korisnikId, auth.sub)
-        ))
+        .where(
+          and(
+            eq(kupljeniKursevi.kursId, kursId),
+            eq(kupljeniKursevi.korisnikId, auth.sub)
+          )
+        )
         .limit(1);
 
       if (jeVlasnik || kupovina) {
@@ -86,16 +97,22 @@ export async function GET(
       }
     }
 
+    const prodaje = await db
+      .select()
+      .from(kupljeniKursevi)
+      .where(eq(kupljeniKursevi.kursId, kursId))
+      .limit(1);
+
+    const imaProdaja = prodaje.length > 0;
+
     const sveLekcije = await db
       .select()
       .from(videoLekcija)
       .where(eq(videoLekcija.kursId, kursId))
       .orderBy(asc(videoLekcija.poredak));
 
-    const filtriraneLekcije = sveLekcije.map(l => {
-      if (imaPristupSadrzaju) {
-        return l;
-      }
+    const filtriraneLekcije = sveLekcije.map((l) => {
+      if (imaPristupSadrzaju) return l;
       const { video, ...javniPodaci } = l;
       return javniPodaci;
     });
@@ -105,7 +122,8 @@ export async function GET(
       kurs: {
         ...kursPodaci,
         lekcije: filtriraneLekcije,
-        jeKupljen: imaPristupSadrzaju
+        jeKupljen: imaPristupSadrzaju,
+        imaProdaja: imaProdaja
       }
     });
 
@@ -163,21 +181,13 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const csrfToken = request.headers.get("x-csrf-token");
-  if (!csrfToken || csrfToken !== process.env.CSRF_SECRET) {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ message: "CSRF zaštita: nevalidan token" }, { status: 403 });
-    }
-  }
-
   try {
     const { id: kursId } = await params;
     const body = await request.json();
     const { naziv, opis, cena, kategorija, slika, lekcije } = body;
 
     const auth = await getAuth();
-    if (!auth) return NextResponse.json({ error: 'Niste ulogovani ili nevažeći token' }, { status: 401 });
+    if (!auth) return NextResponse.json({ error: 'Niste ulogovani' }, { status: 401 });
 
     const [postojeciKurs] = await db.select().from(kurs).where(eq(kurs.id, kursId));
     if (!postojeciKurs) return NextResponse.json({ error: 'Kurs ne postoji' }, { status: 404 });
@@ -186,21 +196,57 @@ export async function PATCH(
       return NextResponse.json({ error: 'Zabranjen pristup - niste vlasnik kursa' }, { status: 403 });
     }
 
+    // Provera prodaja radi zaštite od brisanja lekcija
+    const prodaje = await db.select().from(kupljeniKursevi).where(eq(kupljeniKursevi.kursId, kursId)).limit(1);
+    const imaProdaja = prodaje.length > 0;
+
     await db.transaction(async (tx) => {
+      // 1. Update osnovnih podataka
       await tx.update(kurs).set({
         naziv, opis, cena: cena.toString(), kategorija, slika
       }).where(eq(kurs.id, kursId));
 
-      if (lekcije && lekcije.length > 0) {
+      if (lekcije) {
+        // --- SINHRONIZACIJA LEKCIJA (Insert, Update, Delete) ---
+        
+        // Uzimamo trenutne ID-eve iz baze
+        const trenutneUBazi = await tx
+          .select({ id: videoLekcija.id })
+          .from(videoLekcija)
+          .where(eq(videoLekcija.kursId, kursId));
+        
+        const postojeciIds = trenutneUBazi.map(l => l.id);
+        const dolazniIds = lekcije.map((l: any) => l.id).filter(Boolean);
+
+        // Brisanje onih kojih nema u novom spisku
+        const zaBrisanje = postojeciIds.filter(id => !dolazniIds.includes(id));
+
+        if (zaBrisanje.length > 0 && !imaProdaja) {
+          await tx.delete(napredak).where(inArray(napredak.videoLekcijaId, zaBrisanje));
+          await tx.delete(videoLekcija).where(inArray(videoLekcija.id, zaBrisanje));
+        }
+
+        // Update postojecih ili Insert novih
         for (let i = 0; i < lekcije.length; i++) {
           const l = lekcije[i];
           if (l.id) {
             await tx.update(videoLekcija)
-              .set({ naziv: l.naziv, opis: l.opis, trajanje: l.trajanje.toString(), video: l.video, poredak: i })
+              .set({
+                naziv: l.naziv,
+                opis: l.opis,
+                trajanje: l.trajanje.toString(),
+                video: l.video,
+                poredak: i
+              })
               .where(eq(videoLekcija.id, l.id));
           } else {
             await tx.insert(videoLekcija).values({
-              naziv: l.naziv, opis: l.opis, trajanje: l.trajanje.toString(), video: l.video, kursId: kursId, poredak: i
+              naziv: l.naziv,
+              opis: l.opis,
+              trajanje: l.trajanje.toString(),
+              video: l.video,
+              kursId: kursId,
+              poredak: i
             });
           }
         }
@@ -240,14 +286,6 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const csrfToken = request.headers.get("x-csrf-token");
-  if (!csrfToken || csrfToken !== process.env.CSRF_SECRET) {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ message: "CSRF zaštita" }, { status: 403 });
-    }
-  }
-
   try {
     const { id: kursId } = await params;
     const auth = await getAuth();

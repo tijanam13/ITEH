@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { csrf } from '@/lib/csrf';
 import { db } from "@/db/index";
 import { kupljeniKursevi, kurs, korisnik } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { cookies, headers } from "next/headers";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
+const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
 /**
  * @swagger
@@ -53,7 +52,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
  *       500:
  *         description: Greška na serveru prilikom dobavljanja podataka.
  */
-export const GET = csrf(async function GET(req: Request) {
+export const GET = async function GET(req: Request) {
   try {
     let token: string | undefined;
 
@@ -110,4 +109,4 @@ export const GET = csrf(async function GET(req: Request) {
       { status: 500 }
     );
   }
-});
+};

@@ -4,7 +4,6 @@ import { db } from "@/db";
 import { korisnik } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
-import { csrf } from '@/lib/csrf';
 
 /**
  * @swagger
@@ -13,13 +12,13 @@ import { csrf } from '@/lib/csrf';
  *     summary: Slanje mejla za resetovanje lozinke
  *     description: Prima korisnički email, generiše siguran reset token, čuva ga u bazi i šalje link sa tokenom putem Nodemailer-a.
  *     tags: [Auth]
- *     parameters:
+ *      parameters:
  *       - in: header
- *         name: x-csrf-token
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token za autentifikaciju
  *         schema:
  *           type: string
- *         required: true
- *         description: CSRF zaštita - unesite vrednost CSRF tokena
  *     requestBody:
  *       required: true
  *       content:
@@ -49,7 +48,7 @@ import { csrf } from '@/lib/csrf';
  *       500:
  *         description: Greška na serveru (problem sa bazom ili Gmail servisom).
  */
-export const POST = csrf(async function POST(req: Request) {
+export const POST = async function POST(req: Request) {
   try {
     const body = await req.json();
     const email = body.email?.toLowerCase().trim();
@@ -113,4 +112,4 @@ export const POST = csrf(async function POST(req: Request) {
     console.error("FORGOT PASSWORD ERROR:", error);
     return NextResponse.json({ message: "Greška na serveru" }, { status: 500 });
   }
-});
+};

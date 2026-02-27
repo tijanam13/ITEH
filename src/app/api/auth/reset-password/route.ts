@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import { db } from "@/db";
 import { korisnik } from "@/db/schema";
 import { eq, and, gt } from "drizzle-orm";
-import { csrf } from '@/lib/csrf';
 
 /**
  * @swagger
@@ -12,13 +11,13 @@ import { csrf } from '@/lib/csrf';
  *     summary: Resetovanje lozinke pomoću tokena
  *     description: Prima tajni token iz mejla i novu lozinku, proverava da li je token validan i nije istekao, hešuje novu lozinku i ažurira je u bazi.
  *     tags: [Auth]
- *     parameters:
+ *      parameters:
  *       - in: header
- *         name: x-csrf-token
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token za autentifikaciju
  *         schema:
  *           type: string
- *         required: true
- *         description: CSRF zaštita - unesite vrednost CSRF tokena
  *     requestBody:
  *       required: true
  *       content:
@@ -53,7 +52,7 @@ import { csrf } from '@/lib/csrf';
  *       500:
  *         description: Greška na serveru.
  */
-export const POST = csrf(async function POST(req: Request) {
+export const POST = async function POST(req: Request) {
   try {
     const body = await req.json();
     const { token, novaLozinka } = body;
@@ -99,4 +98,4 @@ export const POST = csrf(async function POST(req: Request) {
     console.error("RESET PASSWORD ERROR:", error);
     return NextResponse.json({ message: "Greška na serveru" }, { status: 500 });
   }
-});
+};

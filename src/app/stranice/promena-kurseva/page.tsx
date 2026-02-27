@@ -70,7 +70,7 @@ function IzmeniKursSadrzaj() {
         });
         setLekcije(kurs.lekcije || []);
 
-        setIsPurchased(kurs.jeKupljen || false);
+        setIsPurchased(kurs.imaProdaja || false);
 
       } catch (err: any) {
         setNotification({ message: err?.message || "Greška pri učitavanju kursa.", type: "error" });
@@ -146,11 +146,14 @@ const handleSubmit = async (e: React.FormEvent) => {
           <BookOpen size={24} />
           <label className="contact-label !mb-0 text-xl">Koji kurs želite da izmenite?</label>
         </div>
-        <select
-          className="auth-input cursor-pointer"
-          value={selectedKursId}
-          onChange={(e) => setSelectedKursId(e.target.value)}
-        >
+       <select
+  className="auth-input cursor-pointer"
+  value={selectedKursId}
+  onChange={(e) => {
+    setSelectedKursId(e.target.value);
+    setIsPurchased(false); 
+  }}
+>
           <option value="">-- Odaberite kurs --</option>
           {kursevi.map((k) => (
             <option key={k.id} value={k.id}>{k.naziv}</option>

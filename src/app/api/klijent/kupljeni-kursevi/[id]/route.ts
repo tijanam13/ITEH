@@ -5,7 +5,7 @@ import { eq, asc, and, inArray } from "drizzle-orm";
 import { cookies, headers } from "next/headers";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
+const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
 /**
  * @swagger
@@ -118,7 +118,9 @@ export async function GET(
       success: true,
       kurs: kursPodaci,
       lekcije,
-      inicijalniNapredak
+      inicijalniNapredak,
+      korisnikId: korisnikId 
+
     });
 
   } catch (error: any) {

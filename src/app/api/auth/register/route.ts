@@ -3,7 +3,6 @@ import { db } from "@/db";
 import { korisnik } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { csrf } from '@/lib/csrf';
 
 /**
  * @swagger
@@ -12,13 +11,13 @@ import { csrf } from '@/lib/csrf';
  *     summary: Registracija novog korisnika
  *     description: Kreira novi korisnički nalog u bazi podataka. Lozinka se hešuje pomoću bcrypt-a, a podrazumevana uloga (role) je automatski postavljena na "KLIJENT" radi bezbednosti.
  *     tags: [Auth]
- *     parameters:
+ *      parameters:
  *       - in: header
- *         name: x-csrf-token
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token za autentifikaciju
  *         schema:
  *           type: string
- *         required: true
- *         description: CSRF zaštita - unesite vrednost CSRF tokena
  *     requestBody:
  *       required: true
  *       content:
@@ -63,7 +62,7 @@ import { csrf } from '@/lib/csrf';
  *       500:
  *         description: Greška na serveru.
  */
-export const POST = csrf(async function POST(req: Request) {
+export const POST = async function POST(req: Request) {
   try {
     const body = await req.json();
 
@@ -121,4 +120,4 @@ export const POST = csrf(async function POST(req: Request) {
       { status: 500 }
     );
   }
-});
+};

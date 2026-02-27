@@ -38,14 +38,11 @@ function LoginFormContent() {
     setLoading(true);
 
     try {
-      // Učitaj CSRF token i pošalji u headeru
-      const tokenRes = await fetch('/api/csrf-token');
-      const tokenData = await tokenRes.json();
-      const csrfToken = tokenData.csrfToken;
+      
 
       const res = await fetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
+        headers: { "Content-Type": "application/json"},
         body: JSON.stringify(form),
       });
 

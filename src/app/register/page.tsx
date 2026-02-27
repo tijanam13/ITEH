@@ -45,13 +45,11 @@ function RegisterFormContent() {
 
     setLoading(true);
     try {
-      const tokenRes = await fetch('/api/csrf-token');
-      const tokenData = await tokenRes.json();
-      const csrfToken = tokenData.csrfToken;
+      
 
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
+        headers: { "Content-Type": "application/json"},
         body: JSON.stringify(form),
       });
 

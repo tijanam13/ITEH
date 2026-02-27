@@ -4,9 +4,8 @@ import { kurs, korisnik, videoLekcija } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { cookies, headers } from 'next/headers';  
-import { csrf } from '@/lib/csrf';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tvoja_tajna_sifra_123';
+const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
 /**
  * @swagger
@@ -108,14 +107,11 @@ export async function GET() {
  *     tags: [Kursevi]
  *     security:
  *       - BearerAuth: []
- *       - CSRFToken: []
  *     parameters:
  *       - in: header
- *         name: x-csrf-token
  *         schema:
  *           type: string
  *         required: true
- *         description: CSRF zaštita - unesite vrednost CSRF tokena
  *     requestBody:
  *       required: true
  *       content:
@@ -144,11 +140,11 @@ export async function GET() {
  *       401:
  *         description: Niste ulogovani (Nedostaje validan token).
  *       403:
- *         description: Zabranjen pristup (Uloga nije EDUKATOR) ili CSRF token nije validan.
+ *         description: Zabranjen pristup (Uloga nije EDUKATOR).
  *       500:
  *         description: Greška na serveru prilikom čuvanja u bazu.
  */
-export const POST = csrf(async function POST(request: Request) {
+export const POST = async function POST(request: Request) {
   try {
     let token: string | undefined;
 
@@ -220,4 +216,4 @@ export const POST = csrf(async function POST(request: Request) {
     console.error('API /kursevi POST error:', error);
     return NextResponse.json({ success: false, error: 'Greška pri čuvanju podataka.' }, { status: 500 });
   }
-});
+};

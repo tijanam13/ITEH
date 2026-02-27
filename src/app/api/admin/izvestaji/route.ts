@@ -3,7 +3,7 @@ import { getMesecnaStatistikaKlijenata } from "@/app/actions/admin";
 import { cookies, headers } from "next/headers";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
+const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
 /**
  * @swagger

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { csrf } from '@/lib/csrf';
 import { dodajKorisnikaAction } from "@/app/actions/korisnik";
 import { cookies, headers } from "next/headers";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
+const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
 /**
  * @swagger
@@ -13,16 +12,16 @@ const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
  *     summary: Ručno dodavanje novog korisnika
  *     description: Kreira novog korisnika u bazi podataka. DOZVOLJENO SAMO ZA ADMINA.
  *     tags: [Korisnici]
- *     security:               
+ *     security:
  *       - BearerAuth: []
- *       - CSRFToken: []
+ *
  *     parameters:
  *       - in: header
- *         name: x-csrf-token
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token za autentifikaciju
  *         schema:
  *           type: string
- *         required: true
- *         description: CSRF zaštita - unesite vrednost CSRF tokena
  *     requestBody:
  *       required: true
  *       content:
@@ -54,6 +53,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
  *                 type: string
  *                 enum: [KLIJENT, EDUKATOR, ADMIN]
  *                 example: KLIJENT
+ *
  *     responses:
  *       200:
  *         description: Uspešno dodat korisnik.
@@ -66,14 +66,17 @@ const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
  *                   type: boolean
  *                 message:
  *                   type: string
- *       401:                     
+ *
+ *       401:
  *         description: Niste ulogovani (Nedostaje token).
- *       403:                     
+ *
+ *       403:
  *         description: Zabranjen pristup (Samo administrator može ručno dodavati korisnike).
+ *
  *       500:
  *         description: Greška na serveru prilikom dodavanja korisnika.
  */
-export const POST = csrf(async function POST(req: Request) {
+export const POST = async function POST(req: Request) {
   try {
     let token: string | undefined;
 
@@ -123,4 +126,4 @@ export const POST = csrf(async function POST(req: Request) {
     console.error("Greška u API ruti /api/admin/korisnik:", err);
     return NextResponse.json({ success: false, error: "Greška na serveru prilikom dodavanja korisnika." }, { status: 500 });
   }
-});
+};

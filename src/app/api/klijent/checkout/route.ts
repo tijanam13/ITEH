@@ -5,9 +5,8 @@ import jwt from "jsonwebtoken";
 import { db } from "@/db";
 import { kurs } from "@/db/schema";
 import { inArray } from "drizzle-orm";
-import { csrf } from '@/lib/csrf';
 
-const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
+const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
 /**
  * @swagger
@@ -18,14 +17,13 @@ const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
  *     tags: [Plaćanje]
  *     security:
  *       - BearerAuth: []
- *       - CSRFToken: []
- *     parameters:
+ *      parameters:
  *       - in: header
- *         name: x-csrf-token
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token za autentifikaciju
  *         schema:
  *           type: string
- *         required: true
- *         description: CSRF zaštita - unesite vrednost CSRF tokena
  *     requestBody:
  *       required: true
  *       content:
@@ -60,7 +58,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
  *       500:
  *         description: Greška na serveru.
  */
-export const POST = csrf(async function POST(req: Request) {
+export const POST = async function POST(req: Request) {
   try {
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
@@ -134,4 +132,4 @@ export const POST = csrf(async function POST(req: Request) {
     console.error("Checkout Error:", err.message);
     return NextResponse.json({ error: "Došlo je do greške pri kreiranju plaćanja." }, { status: 500 });
   }
-});
+};

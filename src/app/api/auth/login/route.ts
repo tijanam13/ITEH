@@ -5,22 +5,21 @@ import { db } from "@/db";
 import { korisnik } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-const JWT_SECRET = process.env.JWT_SECRET || "tvoja_tajna_sifra_123";
+const JWT_SECRET = process.env.JWT_SECRET || 'super_tajni_string_123';
 
-import { csrf } from '@/lib/csrf';
 /**
  * @swagger
  * /api/auth/login:
  *     summary: Prijava korisnika (Login)
  *     description: Autentifikuje korisnika, generiše JWT i postavlja ga u HTTP-only kuki. Token se NE vraća u JSON telu radi veće bezbednosti.
  *     tags: [Auth]
- *     parameters:
+ *      parameters:
  *       - in: header
- *         name: x-csrf-token
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token za autentifikaciju
  *         schema:
  *           type: string
- *         required: true
- *         description: CSRF zaštita - unesite vrednost CSRF tokena
  *     requestBody:
  *       required: true
  *       content:
@@ -68,7 +67,7 @@ import { csrf } from '@/lib/csrf';
  *       500:
  *         description: Greška na serveru.
  */
-export const POST = csrf(async function POST(req: Request) {
+export const POST = async function POST(req: Request) {
   try {
     const body = await req.json();
 
@@ -117,4 +116,4 @@ export const POST = csrf(async function POST(req: Request) {
     console.error("Login Error:", error);
     return NextResponse.json({ message: "Greška na serveru" }, { status: 500 });
   }
-});
+};
